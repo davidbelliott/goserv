@@ -25,12 +25,15 @@ const default_template_name = "layout"
 
 const static_url = "static"
 const static_img_url = "img"
+const static_css_url = "css"
 const img_url = static_url + "/" + static_img_url
+const css_url = static_url + "/" + static_css_url
 
 const root_name = "home"
 
 type Page struct {
     Body template.HTML
+    Head template.HTML
     Links [][2]string
 }
 
@@ -78,6 +81,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     fm.Handle("+++", front.YAMLHandler)
     template_name := default_template_name
     f, body, err := fm.Parse(strings.NewReader(string(md)))
+    head := ""
     if err != nil {
         body = string(md)
     } else {
@@ -85,6 +89,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
         template_name_fm, ok := f["template"]
         if ok {
             template_name = template_name_fm.(string)
+        }
+        // Attempt to get css path from front matter
+        css_name, ok := f["css"]
+        if ok {
+            head += "<link rel=\"stylesheet\" type=\"text/css\" href=\"/" + css_url + "/" + css_name.(string) + "\">"
         }
     }
     opts := html.RendererOptions{RenderNodeHook: render_node_hook}
@@ -100,7 +109,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
             links = append(links, [2]string{endpoint, link_url})
         }
     }
-    page := Page{Body: template.HTML(markdown.ToHTML([]byte(body), parse, renderer)), Links: links}
+    page := Page{Body: template.HTML(markdown.ToHTML([]byte(body), parse, renderer)), Links: links, Head: template.HTML(head)}
 
     template_path := fmt.Sprintf("%s/%s.html", template_dir, template_name)
     t, err := template.ParseFiles(template_path)
