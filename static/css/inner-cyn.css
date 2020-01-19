@@ -1,0 +1,10 @@
+.img-group {
+    display: flex;
+    justify-content: center;
+}
+
+.img-group > img {
+    width: 100%;
+    height: auto;
+    justify-content: center;
+}

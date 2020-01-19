@@ -1,0 +1,75 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: lightgoldenrodyellow;
+    font-family: sans-serif;
+}
+
+table {
+    margin: 0 auto;
+}
+
+tbody {
+    vertical-align: top;
+}
+
+th, td {
+    padding: 0.25rem;
+}
+
+blockquote {
+    font-style: italic;
+}
+
+sup, sub {
+    vertical-align: baseline;
+    position: relative;
+    top: -0.4em;
+}
+
+sub { 
+    top: 0.4em; 
+}
+
+hr {
+    border: none;
+    background-color: black;
+    color: black;
+    height: 1px
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.head {
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-bottom: 1px solid black;
+    text-align: left;
+    padding: 0 20px;
+}
+
+.links {
+    display: block;
+}
+
+.center {
+    text-align: center;
+}
+
+figure {
+    margin: 0;
+}
+
+figure > img {
+    max-width: 100%;
+}
