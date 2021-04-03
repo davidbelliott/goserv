@@ -1,8 +1,8 @@
 # Crossing of the Fathers (mile 40.5)
 
-![**Mile 41.5. Sept. 1962** Approaching Crossing of the Fathers, savoring the last rays of sunlight before we have to take out and head for home -- knowing that this may be our last encounter with Glen Canyon.](crossing-of-the-fathers/last-rays.jpg)
+![**Mile 41.5. Sept. 1962** Approaching Crossing of the Fathers, savoring the last rays of sunlight before we have to take out and head for home---knowing that this may be our last encounter with Glen Canyon.](crossing-of-the-fathers/last-rays.jpg)
 
-When we landed, we found many, many little khaki shelters scattered all over the bar.  It was the movie production company making "The Greatest Story Every Told."  Now, when we see that movie, the shots of John the Babtist at the Jordan River brings back heart wrenching memories of that moving river, our gentle, living river--which we know as the Colorado River in Glen Canyon.
+When we landed, we found many, many little khaki shelters scattered all over the bar.  It was the movie production company making "The Greatest Story Every Told."  Now, when we see that movie, the shots of John the Babtist at the Jordan River brings back heart wrenching memories of that moving river, our gentle, living river---which we know as the Colorado River in Glen Canyon.
 
 ![**Jan. 1963** This was the most common take-out point for float trips.](crossing-of-the-fathers/take-out.jpg)
 

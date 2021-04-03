@@ -2,22 +2,23 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/static/css/style.css">
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         {{.Head}}
     </head>
     <body>
-	<div class="head">
+        <div class="content">
+        <div class="head" id="head">
             <div class="links">
                 [Path: {{range $i, $a := .Links -}}
                     {{- if $i}}/{{end -}}
                     <a href="{{index $a 1}}">{{index $a 0}}</a>
-                {{- end}}]
+                    {{- end}}] [<a href="/about">about</a>] [<a href="mailto:contact@moraine.dev">contact</a>]
             </div>
+            <span id="alerts"></span>
         </div>
         <div class="container">
         {{.Body}}
         </div>
+        </div>
+        <footer><a href="https://viralpubliclicense.org">VIRAL PUBLIC LICENSE | Copyleft (ɔ) All Rights Reversed</a></footer>
     </body>
 </html>

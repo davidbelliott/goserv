@@ -1,0 +1,30 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{.Head}}
+    </head>
+    <body>
+        <div class="head" id="head">
+            <div class="links">
+                [Path: {{range $i, $a := .Links -}}
+                    {{- if $i}}/{{end -}}
+                    <a href="{{index $a 1}}">{{index $a 0}}</a>
+                    {{- end}}] [<a href="/about">about</a>] [<a href="mailto:contact@moraine.dev">contact</a>]
+            </div>
+            <span id="alerts"></span>
+        </div>
+        <div class="container">
+            {{.Body}}
+            {{ if .Error }}
+            <p>The following error occurred and an account could not be created:</p>
+            <p>{{.Error}}</p>
+            {{ else }}
+            <p>Your account has been created on our homeserver. Make sure to record the following information before you refresh or navigate away from the page.</p>
+            <p>To proceed, download a Matrix client such as <a href="https://element.io">element</a> or another client listed on <a href="https://matrix.org/clients/">matrix.org/clients/</a>.
+            <p><b>Username:</b> @{{.Username}}:{{.Homeserver}}</p>
+            <p><b>Password:</b> the password you entered previously</p>
+            {{ end }}
+        </div>
+    </body>
+</html>

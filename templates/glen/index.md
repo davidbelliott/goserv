@@ -12,7 +12,7 @@
 <html></td><td></html>
 ![The landing at False Entrance Canyon - mile 63.1](main/false-entrance.jpg)
 <center>
-[Explore by Map](map-central) ([Upper](map-upper) / [Middle](map-middle) / [Lower](map-lower)) or [Explore from Top](hite)
+Explore by Map ([Upper](map-upper) / [Middle](map-middle) / [Lower](map-lower)) or [Explore from Top](hite)
 </center>
 <html></td><td style="max-width: 150"></html>
 ![Catfish Canyon - September 1962](main/catfish-cyn-before.jpg)

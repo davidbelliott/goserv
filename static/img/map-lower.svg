@@ -900,9 +900,9 @@
          y="849.12921">Navajo Mtn.</tspan></text>
     <a
        xlink:href="../../glen/dam"
-       target="_top"
+       style="fill:#000000;fill-opacity:0"
        id="a6862"
-       style="fill:#000000;fill-opacity:0">
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -913,10 +913,10 @@
     </a>
     <a
        xlink:href="../../glen/wahweap-cyn"
-       transform="translate(26.105778,-23.665516)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(26.105778,-23.665516)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -927,10 +927,10 @@
     </a>
     <a
        xlink:href="../../glen/labyrinth-cyn"
-       target="_top"
-       id="a6862-3-4"
+       transform="translate(391.92699,73.995701)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(391.92699,73.995701)">
+       id="a6862-3-4"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -941,10 +941,10 @@
     </a>
     <a
        xlink:href="../../glen/crossing-of-the-fathers"
-       transform="translate(466.09106,-38.107287)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3-4-4"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(466.09106,-38.107287)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -955,10 +955,10 @@
     </a>
     <a
        xlink:href="../../glen/face-cyn"
-       transform="translate(499.41005,90.885213)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3-4-6"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(499.41005,90.885213)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -969,10 +969,10 @@
     </a>
     <a
        xlink:href="../../glen/gregory-butte"
-       target="_top"
-       id="a6862-3-4-6-1"
+       transform="translate(574.19659,49.775838)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(574.19659,49.775838)">
+       id="a6862-3-4-6-1"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -983,10 +983,10 @@
     </a>
     <a
        xlink:href="../../glen/west-cyn-creek"
-       transform="translate(595.83279,80.795266)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3-4-6-1-5"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(595.83279,80.795266)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -997,10 +997,10 @@
     </a>
     <a
        xlink:href="../../glen/dove-cyn"
-       target="_top"
-       id="a6862-3-4-6-1-5-6"
+       transform="translate(623.89945,84.265906)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(623.89945,84.265906)">
+       id="a6862-3-4-6-1-5-6"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1011,10 +1011,10 @@
     </a>
     <a
        xlink:href="../../glen/little-dungeon-cyn"
-       transform="translate(660.95,75.45779)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3-4-6-1-5-6-1"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(660.95,75.45779)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1025,10 +1025,10 @@
     </a>
     <a
        xlink:href="../../glen/rock-creek"
-       target="_top"
-       id="a6862-3-4-6-1-5-6-1-8"
+       transform="translate(752.67249,31.690483)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(752.67249,31.690483)">
+       id="a6862-3-4-6-1-5-6-1-8"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1039,10 +1039,10 @@
     </a>
     <a
        xlink:href="../../glen/dungeon-cyn"
-       transform="translate(751.87271,85.775573)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a6862-3-4-6-1-5-6-1-8-7"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(751.87271,85.775573)">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1053,10 +1053,10 @@
     </a>
     <a
        xlink:href="../../glen/grotto-cyn"
-       target="_top"
-       id="a6862-3-4-6-1-5-6-1-8-7-1"
+       transform="translate(778.81444,103.19479)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(778.81444,103.19479)">
+       id="a6862-3-4-6-1-5-6-1-8-7-1"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1067,10 +1067,10 @@
     </a>
     <a
        xlink:href="../../glen/catfish-cyn"
-       transform="translate(814.81418,102.96253)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5222"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(814.81418,102.96253)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5220"
@@ -1081,10 +1081,10 @@
     </a>
     <a
        xlink:href="../../glen/the-hermitage"
-       target="_top"
-       id="a5226"
+       transform="translate(828.93796,74.714962)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(828.93796,74.714962)">
+       id="a5226"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1095,10 +1095,10 @@
     </a>
     <a
        xlink:href="../../glen/dangling-rope-cyn"
-       transform="translate(896.27228,114.78709)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5230"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(896.27228,114.78709)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5228"
@@ -1109,10 +1109,10 @@
     </a>
     <a
        xlink:href="../../glen/balanced-rock-cyn"
-       target="_top"
-       id="a5234"
+       transform="translate(950.79666,142.37774)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(950.79666,142.37774)">
+       id="a5234"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1123,10 +1123,10 @@
     </a>
     <a
        xlink:href="../../glen/false-entrance-cyn"
-       transform="translate(914.99451,172.59607)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5238"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(914.99451,172.59607)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5236"
@@ -1137,10 +1137,10 @@
     </a>
     <a
        xlink:href="../../glen/little-arch-cyn"
-       target="_top"
-       id="a5242"
+       transform="translate(943.40631,196.40943)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(943.40631,196.40943)">
+       id="a5242"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1151,10 +1151,10 @@
     </a>
     <a
        xlink:href="../../glen/cathedral-cyn"
-       transform="translate(996.28838,201.00787)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5246"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(996.28838,201.00787)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5244"
@@ -1165,10 +1165,10 @@
     </a>
     <a
        xlink:href="../../glen/driftwood"
-       target="_top"
-       id="a5250"
+       transform="translate(1025.8498,182.28564)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(1025.8498,182.28564)">
+       id="a5250"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1179,10 +1179,10 @@
     </a>
     <a
        xlink:href="../../glen/spring-pool"
-       transform="translate(1051.4697,195.42404)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5254"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(1051.4697,195.42404)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5252"
@@ -1193,10 +1193,10 @@
     </a>
     <a
        xlink:href="../../glen/forbidding"
-       target="_top"
-       id="a5258"
+       transform="translate(1074.7904,222.68623)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(1074.7904,222.68623)">
+       id="a5258"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1207,10 +1207,10 @@
     </a>
     <a
        xlink:href="../../glen/rainbow"
-       transform="translate(1038.6598,297.90359)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5262"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(1038.6598,297.90359)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5260"
@@ -1221,10 +1221,10 @@
     </a>
     <a
        xlink:href="../../glen/wishbone"
-       target="_top"
-       id="a5266"
+       transform="translate(1113.8581,235.45335)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(1113.8581,235.45335)">
+       id="a5266"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
@@ -1235,10 +1235,10 @@
     </a>
     <a
        xlink:href="../../glen/twilight"
-       transform="translate(1138.9484,209.66627)"
-       style="opacity:1;fill:#000000;fill-opacity:0"
+       target="_top"
        id="a5270"
-       target="_top">
+       style="opacity:1;fill:#000000;fill-opacity:0"
+       transform="translate(1138.9484,209.66627)">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
          id="rect5268"
@@ -1248,11 +1248,11 @@
          y="330.77289" />
     </a>
     <a
-       xlink:href="../../glen/navajo-point"
-       target="_top"
-       id="a5274"
+       xlink:href="../../glen/navajo-pt"
+       transform="translate(1081.5639,91.353038)"
        style="opacity:1;fill:#000000;fill-opacity:0"
-       transform="translate(1081.5639,91.353038)">
+       id="a5274"
+       target="_top">
       <rect
          y="330.77289"
          x="13.29255"
