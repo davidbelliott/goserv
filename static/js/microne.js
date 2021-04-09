@@ -1,3 +1,30 @@
+function populate_tracks(tracks, dl_link=false) {
+    tracks_div = document.getElementById('tracks');
+    var players = []
+    tracks.forEach(function (trackname) {
+	var source = '/static/wav/'.concat(trackname, '.mp3');
+        var wav = '/static/wav/'.concat(trackname, '.wav');
+    	var t_div = document.createElement('div');
+	var link = document.createElement('a');
+	var linktext = document.createTextNode(trackname);
+	link.setAttribute('href', wav);
+	link.appendChild(linktext);
+	var player = document.createElement('div');
+	player.className = 'player';
+	player.id = 'player-'.concat(trackname);
+        var m = new Microne(player);
+        m.source(source);
+        players.push(m);
+        if (dl_link) {
+            t_div.appendChild(link);
+        }
+	t_div.appendChild(player);
+	tracks_div.appendChild(t_div);
+	tracks_div.appendChild(document.createElement('br'));
+    })
+    return players;
+}
+
 function Microne(parent_el) {
 	this.audio = null
 	this._src_ = null
