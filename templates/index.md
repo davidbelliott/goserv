@@ -1,30 +1,19 @@
 +++
-template: layout.html
 css: index.css
 +++
 
 # `0xDEADFACADE`
 
+<html>
+
 <canvas id="stellated" class="outline"></canvas>
 <p></p>
 <div id="tracks"></div>
 
-<html>
-
-<script src="/static/js/three.js"></script>
-<script src="/static/js/microne.js"></script>
-<script src="/static/js/stellated.js"></script>
-<script>
-    tracks = ["p10-a"];
-    var player = populate_tracks(tracks, false)[0];
-    player.on("pause", stellated_pause);
-    player.on("play", stellated_play);
-    player.on("playing", stellated_play);
-    player.on("seeked", stellated_seeked);
-    player.on("waiting", stellated_pause);
-    player.on("timeupdate", stellated_time_update);
-</script>
-<script src="/static/js/load_components.js"></script>
+<script defer src="/static/js/three.js"></script>
+<script defer src="/static/js/microne.js"></script>
+<script defer src="/static/js/stellated.js"></script>
+<script defer src="/static/js/index.js"></script>
 
 </html>
 

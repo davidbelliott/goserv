@@ -1,72 +1,81 @@
+const max_ampl = 32767;
 const canvas = document.getElementById("stellated");
 const video_latency = 0.07; // how much the video typically lags the audio
 
-const scene = new THREE.Scene();
+var scenes = null;
 const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
 
-const renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
+var renderer = null;
 const clock = new THREE.Clock(false);
-renderer.setClearColor("lightyellow");
-renderer.setPixelRatio( window.devicePixelRatio );
-
-const geometry = new THREE.IcosahedronGeometry();
-//const geometry = new THREE.OctahedronGeometry();
-const orig_geom = geometry.clone();
-const basic_mat = new THREE.MeshBasicMaterial( { color: "red" } );
-const wireframe = new THREE.EdgesGeometry(geometry);
-const orig_wireframe = wireframe.clone();
-const wireframe_mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 1, depthTest: false} );
-const multi_mat = [basic_mat, wireframe_mat];
-const poly = new THREE.Mesh(geometry, basic_mat);
-poly.add(new THREE.LineSegments(wireframe, wireframe_mat));
-scene.add( poly );
-
-const cube_geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-const cube_mat = new THREE.MeshBasicMaterial();
-const cubes = new THREE.InstancedMesh(cube_geom, cube_mat, 4);
-for (let i = 0; i < 4; i++) {
-    let pos_mat = new THREE.Matrix4();
-    let x = (i & 0x1) * 2 - 1;
-    let y = (i & 0x2) - 1;
-    pos_mat.makeTranslation(x, y, 0);
-    cubes.setMatrixAt(i, pos_mat);
-    cubes.setColorAt(i, new THREE.Color("black"));
-}
-//scene.add(cubes);
-
-camera.position.z = 2;
 
 var paused = true;
 var last_known_song_time = 0.0;
-var clock_time_when_known = 0.0;
+var num_chs = null;
 
-const num_chs = 4;
-const max_ampl = 32767;
-var envelope = null;
+var envelopes = null;
+var song_time = 0;
 
-var oreq = new XMLHttpRequest();
-oreq.open("GET", "/static/wav/p10-a.bin", true);
-oreq.responseType = "arraybuffer";
-oreq.addEventListener("load", function (oevent) {
-    var arraybuffer = oreq.response;
-    if (arraybuffer) {
-        envelope = new Int16Array(arraybuffer);
+var last_visualized_song_idx = 0;
+
+class LoadEnvelopeCallback {
+    index;
+    oreq;
+    constructor(oreq, index) {
+        this.oreq = oreq;
+        this.index = index;
     }
-} );
-oreq.send();
+    handleEvent(oevent) {
+        var arraybuffer = this.oreq.response;
+        if (arraybuffer) {
+            envelopes[this.index] = new Int16Array(arraybuffer);
+        }
+    }
+}
+
+function init() {
+    load_envelopes();
+    scenes = Array(tracks.length).fill(null);
+    num_chs = Array(tracks.length).fill(0);
+    for (var i = 0; i < tracks.length; i++) {
+        scenes[i] = new THREE.Scene();
+        if (init_funcs[i] != null) {
+            num_chs[i] = init_funcs[i](scenes[i], camera);
+        }
+    }
+    renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
+    renderer.setClearColor("lightyellow");
+    renderer.setPixelRatio( window.devicePixelRatio );
+}
+
+function load_envelopes() {
+    envelopes = Array(tracks.length).fill(null);
+    for (var i = 0; i < tracks.length; i++) {
+        if (init_funcs[i] != null) {
+            var oreq = new XMLHttpRequest();
+            oreq.open("GET", "/static/wav/" + tracks[i] + ".bin", true);
+            oreq.responseType = "arraybuffer";
+            oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, i));
+            oreq.send();
+        }
+    }
+}
 
 function get_ampl(song_time, ch) {
-    if (envelope != null) {
-        let ch_offset = Math.floor(envelope.length * ch / num_chs);
-        let val = envelope[ch_offset + Math.floor(song_time * 126)];
-        if (val == 0) {
-            return val;
-        }
-        let scaled = 0.5 * Math.log(val) / Math.log(max_ampl) +
-                        0.5 * val / max_ampl;
-        return scaled;
+    if (envelopes == null) {
+        return 0;
     }
-    return 0;
+    var envelope = envelopes[now_playing_idx];
+    if (envelope == null) {
+        return 0;
+    }
+    let ch_offset = Math.floor(envelope.length * ch / num_chs[now_playing_idx]);
+    let val = envelope[ch_offset + Math.floor(song_time * 126)];
+    if (val == 0) {
+        return val;
+    }
+    let scaled = 0.5 * Math.log(val) / Math.log(max_ampl) +
+                    0.5 * val / max_ampl;
+    return scaled;
 }
 
 function webgl_available() {
@@ -82,7 +91,7 @@ function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
     // look up the size the canvas is being displayed
     const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const height = 0.5*width;//canvas.clientHeight;
 
     // adjust displayBuffer size to match
     if (canvas.width !== width || canvas.height !== height) {
@@ -96,67 +105,47 @@ function resizeCanvasToDisplaySize() {
 }
 
 function stellated_pause() {
-    last_known_song_time = player.audio.currentTime;
+    last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.stop();
     paused = true;
 }
 
 function stellated_play() {
-    last_known_song_time = player.audio.currentTime;
+    last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.start();
     paused = false;
 }
 
 function stellated_time_update() {
     if (!paused) {
-        console.log("updating time");
-        last_known_song_time = player.audio.currentTime;
+        last_known_song_time = all_players[now_playing_idx].audio.currentTime;
         clock.start();
     }
 }
 
 function stellated_seeked() {
-    last_known_song_time = player.audio.currentTime;
+    last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.start();
 }
 
 const animate = function () {
     requestAnimationFrame( animate );
     if (!paused) {
-        poly.rotation.x += 0.02;
-        poly.rotation.y += 0.02;
-        var song_time = clock.getElapsedTime() + last_known_song_time;
-        var song_time_comp = Math.min(Math.max(song_time + video_latency, 0.0), player.audio.duration);
-        const positions = geometry.attributes.position.array;
-        const orig_positions = orig_geom.attributes.position.array;
-        const orig_wireframe_positions = orig_wireframe.attributes.position.array;
-        if (envelope != null) {
-            let ampl = get_ampl(song_time_comp, 0);
-            for (let i = 0; i < positions.length; i++) {
-                positions[i] = orig_positions[i] * Math.max(ampl,0.1) * 2;
-            }
-            geometry.attributes.position.needsUpdate = true;
-            ampl = get_ampl(song_time_comp, 2);
-            const positions2 = wireframe.attributes.position.array;
-            for (let i = 0; i < positions2.length; i++) {
-                positions2[i] = orig_wireframe_positions[i] * Math.max(ampl,0.1) * 2;
-            }
-            wireframe.attributes.position.needsUpdate = true;
-
-            ampl = get_ampl(song_time_comp, 1) * 1.5;
-            cubes.scale.set(ampl, ampl, ampl);
-            cubes.rotation.z -= ampl * 0.1;
-        }
-    } else {
-        poly.rotation.x += 0.005;
-        poly.rotation.y += 0.005;
-        cubes.rotation.z -= 0.005;
+        var song_time_raw = clock.getElapsedTime() + last_known_song_time;
+        song_time = Math.min(Math.max(song_time_raw + video_latency, 0.0), all_players[now_playing_idx].audio.duration);
     }
 
     resizeCanvasToDisplaySize();
-    renderer.render( scene, camera );
+    if (num_chs[now_playing_idx] != 0) {
+        var ch_amps = Array(num_chs[now_playing_idx]).fill(0);
+        for (var i = 0; i < num_chs[now_playing_idx]; i++) {
+            ch_amps[i] = get_ampl(song_time, i);
+        }
+        update_funcs[now_playing_idx](paused, song_time, ch_amps);
+        renderer.render( scenes[now_playing_idx], camera );
+        last_visualized_song_idx = now_playing_idx;
+    } else {
+        update_funcs[last_visualized_song_idx](true, 0.0, Array(num_chs[0]).fill(0));
+        renderer.render(scenes[last_visualized_song_idx], camera);
+    }
 };
-
-if (webgl_available()) {
-    animate();
-}

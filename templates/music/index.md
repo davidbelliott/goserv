@@ -1,6 +1,10 @@
 # Music
 
-![](rocks.jpg)
+<!--![](rocks.jpg)-->
+
+<html>
+
+<canvas id="stellated" class="outline"></canvas>
 
 [Making a sick beat](beat)
 
@@ -10,13 +14,13 @@
 
 <div id="tracks"></div>
 
-<script src="/static/js/microne.js"></script>
-
-<script>
-    const tracks = ['p10-a', 'p8-b', 'p7-c', 'p6-a', 'p5-a', 'p4-b'];
-    populate_tracks(tracks);
-</script>
+<script defer src="/static/js/three.js"></script>
+<script defer src="/static/js/microne.js"></script>
+<script defer src="/static/js/stellated.js"></script>
+<script defer src="/static/js/music.js"></script>
 
 </html>
 
 ## MIDI Collection
+
+Coming soon

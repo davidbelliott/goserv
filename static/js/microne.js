@@ -1,7 +1,11 @@
-function populate_tracks(tracks, dl_link=false) {
+var all_players = [];
+var now_playing_idx = 0;
+
+function populate_tracks(tracks, dl_link=true) {
     tracks_div = document.getElementById('tracks');
     var players = []
-    tracks.forEach(function (trackname) {
+    for (var i = 0; i < tracks.length; i++) {
+        trackname = tracks[i];
 	var source = '/static/wav/'.concat(trackname, '.mp3');
         var wav = '/static/wav/'.concat(trackname, '.wav');
     	var t_div = document.createElement('div');
@@ -12,7 +16,7 @@ function populate_tracks(tracks, dl_link=false) {
 	var player = document.createElement('div');
 	player.className = 'player';
 	player.id = 'player-'.concat(trackname);
-        var m = new Microne(player);
+        var m = new Microne(player, i);
         m.source(source);
         players.push(m);
         if (dl_link) {
@@ -21,15 +25,17 @@ function populate_tracks(tracks, dl_link=false) {
 	t_div.appendChild(player);
 	tracks_div.appendChild(t_div);
 	tracks_div.appendChild(document.createElement('br'));
-    })
+    }
+    all_players = players;
     return players;
 }
 
-function Microne(parent_el) {
+function Microne(parent_el, this_idx) {
 	this.audio = null
 	this._src_ = null
 	this._events_ = []
 	this.is_playing = false
+        this.idx = this_idx
 
 	this.p_char = '>'
 	this.s_char = '||'
@@ -86,7 +92,10 @@ function Microne(parent_el) {
 			this.source(this._src_)
 			this._apply_events_()
 		}
-
+                for (const p of all_players) {
+                    p.pause();
+                }
+                now_playing_idx = this.idx;
 		this.is_playing = true
 		this.audio.play()
 		this.play_button.innerHTML = this.s_char
