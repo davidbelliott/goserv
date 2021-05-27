@@ -17,18 +17,6 @@ function p10a_init(scene, camera) {
     p10a.poly.add(new THREE.LineSegments(p10a.wireframe, wireframe_mat));
     scene.add( p10a.poly );
 
-    const cube_geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const cube_mat = new THREE.MeshBasicMaterial();
-    const cubes = new THREE.InstancedMesh(cube_geom, cube_mat, 4);
-    for (let i = 0; i < 4; i++) {
-        let pos_mat = new THREE.Matrix4();
-        let x = (i & 0x1) * 2 - 1;
-        let y = (i & 0x2) - 1;
-        pos_mat.makeTranslation(x, y, 0);
-        cubes.setMatrixAt(i, pos_mat);
-        cubes.setColorAt(i, new THREE.Color("black"));
-    }
-    //scene.add(cubes);
 
     camera.position.z = 2;
 
@@ -63,7 +51,12 @@ const p8b = {
     geometry: null,
     orig_geom: null,
     wireframe: null,
-    orig_wireframe: null
+    orig_wireframe: null,
+    cube_geom: null,
+    cubes: null,
+    cubes_orig: null,
+    cubes_last_scale: [],
+    last_overall_scale: 0
 };
 
 function p8b_init(scene, camera) {
@@ -77,18 +70,26 @@ function p8b_init(scene, camera) {
     p8b.poly.add(new THREE.LineSegments(p8b.wireframe, wireframe_mat));
     scene.add( p8b.poly );
 
-    const cube_geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const cube_mat = new THREE.MeshBasicMaterial();
-    const cubes = new THREE.InstancedMesh(cube_geom, cube_mat, 4);
-    for (let i = 0; i < 4; i++) {
-        let pos_mat = new THREE.Matrix4();
-        let x = (i & 0x1) * 2 - 1;
-        let y = (i & 0x2) - 1;
-        pos_mat.makeTranslation(x, y, 0);
-        cubes.setMatrixAt(i, pos_mat);
-        cubes.setColorAt(i, new THREE.Color("black"));
+    p8b.cube_geom = new THREE.BoxGeometry(0.5);//0.5, 0.5, 0.5);
+    const cube_mat = new THREE.MeshBasicMaterial( { color: "black", transparent: true, opacity: 1.0} );
+    p8b.cubes = new THREE.InstancedMesh(p8b.cube_geom, cube_mat, 64);
+    for (let i = 0; i < 64; i++) {
+        let phi = Math.random() * Math.PI * 2;  // 0-360
+        let theta = Math.random() * Math.PI;    // 0-180
+        let r = Math.random() * 1 + 2;
+        let x = r * Math.sin(theta) * Math.cos(phi);
+        let y = r * Math.sin(theta) * Math.sin(phi);
+        let z = r * Math.cos(theta);
+        let pos = new THREE.Vector3(x, y, z);
+        let scale = new THREE.Vector3(1, 1, 1);
+        let quat = new THREE.Quaternion();
+        quat.identity();
+        let pos_mat = new THREE.Matrix4().compose(pos, quat, scale);
+        p8b.cubes.setMatrixAt(i, pos_mat);
     }
-    //scene.add(cubes);
+    p8b.cubes_last_scale = Array(64).fill(0)
+    p8b.cubes_orig = p8b.cubes.clone();
+    scene.add(p8b.cubes);
 
     camera.position.z = 2;
 
@@ -97,14 +98,43 @@ function p8b_init(scene, camera) {
 
 function p8b_updt(paused, song_time, ch_amps) {
     if (!paused) {
-        p8b.poly.rotation.x = 10 * Math.floor(song_time / 60 * 110);
+        p8b.poly.rotation.x = Math.floor(song_time / 60 * 110);
         p8b.poly.rotation.y += 0.02;
+        p8b.cubes.rotation.y += 0.005;
         const positions = p8b.geometry.attributes.position.array;
         const orig_positions = p8b.orig_geom.attributes.position.array;
         const orig_wireframe_positions = p8b.orig_wireframe.attributes.position.array;
 
+        let freqs = get_freqs(song_time);
+        let overall_scale = 0.95 * p8b.last_overall_scale + 0.05 * ch_amps[2];
+        p8b.last_overall_scale = overall_scale;
+        for (let i = 0; i < 64; i++) {
+            let mat = new THREE.Matrix4();
+            p8b.cubes_orig.getMatrixAt(i, mat);
+            let pos = new THREE.Vector3();
+            let quat = new THREE.Quaternion();
+            let scale = new THREE.Vector3();
+            mat.decompose(pos, quat, scale);
+
+            let new_scale_val = 0.1;
+            if (freqs.includes(i)) {
+                new_scale_val = 0.5;
+                //p8b.cubes.setColorAt(i, new THREE.Color("red"));
+            }
+            let scale_val = 0.8 * p8b.cubes_last_scale[i] + 0.2 * new_scale_val;
+            p8b.cubes_last_scale[i] = scale_val;
+            scale.set(scale_val, scale_val, scale_val);
+            let mat_new = new THREE.Matrix4();
+            pos.multiplyScalar(overall_scale);
+            mat_new.compose(pos, quat, scale);
+
+            p8b.cubes.setMatrixAt(i, mat_new);
+        }
+        p8b.cubes.instanceMatrix.needsUpdate = true;
+
+        let val = Math.max(ch_amps[0], 0.1) * 2;
         for (let i = 0; i < positions.length; i++) {
-            positions[i] = orig_positions[i] * Math.max(ch_amps[0],0.1) * 2;
+            positions[i] = orig_positions[i] * val;
         }
         p8b.geometry.attributes.position.needsUpdate = true;
         const positions2 = p8b.wireframe.attributes.position.array;
@@ -113,6 +143,7 @@ function p8b_updt(paused, song_time, ch_amps) {
         }
         p8b.wireframe.attributes.position.needsUpdate = true;
     } else {
+        p8b.cubes.rotation.y += 0.001;
         p8b.poly.rotation.y += 0.005;
     }
 }

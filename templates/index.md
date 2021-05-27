@@ -24,6 +24,7 @@ Welcome to my home on the World Wide Web.
 |:--|:--|
 |[Glen Canyon Archive](glen)|Documenting the now-submerged Glen Canyon|
 |[Music](music)|Music|
+|[Bible](bible)|Bible|
 |[Matrix Homeserver](matrix)|Self-hosted chatrooms using the Matrix protocol|
 |[Repositories](git)|Self-hosted `git` repositories|
 |[Hardware](hardware)|Hardware|

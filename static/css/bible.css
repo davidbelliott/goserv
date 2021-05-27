@@ -1,0 +1,84 @@
+@import "style.css";
+
+#chapter {
+    width: 50px;
+}
+
+table {
+    margin: unset;
+    margin-bottom: 1em;
+}
+
+.inline-block {
+    display: inline-block;
+    padding-bottom: 0.4em;
+}
+
+.container {
+    max-width: 60em;
+}
+
+.nav-container {
+    padding-left: 3.8em;
+}
+
+.nav th, .nav td {
+    padding: 0 1em;
+}
+
+.nav th:first-of-type, .nav td:first-of-type {
+    padding-left: 0;
+}
+
+.nav th:last-of-type, .nav td:last-of-type {
+    padding-right: 0;
+}
+
+th {
+        text-align: left;
+        border: none;
+        padding: 0 0.4em 1em;
+}
+
+td {
+        text-align: left;
+        border: none;
+        padding: 0 0.4em;
+}
+
+td.num {
+        width: 3em;
+	text-align: right;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid black;
+	height: 1px;
+}
+
+pre {
+	font-family: monospace;
+}
+
+pre a.h {
+	color: #00a;
+}
+
+.A,
+span.i,
+pre a.i {
+	color: #070;
+}
+
+.D,
+span.d,
+pre a.d {
+	color: #e00;
+}
+
+pre a.h:hover,
+pre a.i:hover,
+pre a.d:hover {
+	text-decoration: none;
+}

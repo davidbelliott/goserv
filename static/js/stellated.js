@@ -20,14 +20,20 @@ var last_visualized_song_idx = 0;
 class LoadEnvelopeCallback {
     index;
     oreq;
-    constructor(oreq, index) {
+    bigbit;
+    constructor(oreq, index, bigbit=false) {
         this.oreq = oreq;
         this.index = index;
+        this.bigbit = bigbit;
     }
     handleEvent(oevent) {
         var arraybuffer = this.oreq.response;
         if (arraybuffer) {
-            envelopes[this.index] = new Int16Array(arraybuffer);
+            if (this.bigbit) {
+                envelopes[this.index] = new BigUint64Array(arraybuffer);
+            } else {
+                envelopes[this.index] = new Int16Array(arraybuffer);
+            }
         }
     }
 }
@@ -43,12 +49,12 @@ function init() {
         }
     }
     renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
-    renderer.setClearColor("lightyellow");
+    renderer.setClearColor("lightgoldenrodyellow");
     renderer.setPixelRatio( window.devicePixelRatio );
 }
 
 function load_envelopes() {
-    envelopes = Array(tracks.length).fill(null);
+    envelopes = Array(tracks.length + 1).fill(null);
     for (var i = 0; i < tracks.length; i++) {
         if (init_funcs[i] != null) {
             var oreq = new XMLHttpRequest();
@@ -58,6 +64,32 @@ function load_envelopes() {
             oreq.send();
         }
     }
+    var oreq = new XMLHttpRequest();
+    oreq.open("GET", "/static/wav/freq.bin", true);
+    oreq.responseType = "arraybuffer";
+    oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, tracks.length, true));
+    oreq.send();
+}
+
+function get_freqs(song_time) {
+    if (envelopes == null) {
+        return [];
+    }
+    var envelope = envelopes[envelopes.length - 1];
+    if (envelope == null) {
+        return [];
+    }
+    let duration = all_players[now_playing_idx].audio.duration;
+    let idx = Math.floor(song_time / duration * envelope.length);
+    let val = envelope[idx];
+    var occupied_freqs = [];
+    for (let i = 0, bitmask = 1n; i < 64; i++) {
+        if (val & bitmask) {
+            occupied_freqs.push(i)
+        }
+        bitmask = bitmask << 1n;
+    }
+    return occupied_freqs;
 }
 
 function get_ampl(song_time, ch) {

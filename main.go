@@ -4,6 +4,7 @@ import (
     "fmt"
     "flag"
     "strings"
+    "strconv"
     "log"
     "encoding/json"
     "io"
@@ -34,8 +35,13 @@ const default_css_name = "style.css"
 const static_url = "static"
 const static_img_url = "img"
 const static_css_url = "css"
+const static_txt_url = "txt"
 const img_url = static_url + "/" + static_img_url
 const css_url = static_url + "/" + static_css_url
+const txt_url = static_url + "/" + static_txt_url
+
+var bible_versions = []string{"kjv", "cuv"}
+const default_bible_version = "kjv"
 
 const root_name = "home"
 
@@ -50,6 +56,31 @@ type SignupPage struct {
     Homeserver string
     Username string
     Error error
+}
+
+type BiblePage struct {
+    Page
+    AllVersions []string
+    DisplayVersions []string
+    BookName [2]string
+    Chapter int
+    LinksBookName [2][2]string
+    LinksChapter [2]int
+    BookNumChaps map[string]int
+    BookOrder [][2]string
+    RemoveLinks []string
+    Verses [][]string
+}
+
+type Book struct {
+    NameShort string        `json:"name_short"`
+    NameLong string         `json:"name_long"`
+    Chapters [][]string     `json:"chapters"`
+}
+
+type Bible struct {
+    BookOrder []string      `json:"book_order"`
+    Books map[string]Book   `json:"books"`
 }
 
 var opts html.RendererOptions
@@ -298,7 +329,190 @@ func internalerror(w http.ResponseWriter) {
 
 func get_template(template_name string) (*template.Template, error) {
     template_path := fmt.Sprintf("%s/%s", template_dir, template_name)
-    return template.ParseFiles(template_path)
+    return template.New(template_name).Funcs(template.FuncMap{
+            "inc": func(i int) int {
+                return i + 1
+            },
+        }).ParseFiles(template_path)
+}
+
+func bible_handler(w http.ResponseWriter, r *http.Request) {
+    // Get URL path parameters
+    split_fn := func(c rune) bool {
+        return c == '/'
+    }
+    url_tokens := strings.FieldsFunc(r.URL.Path, split_fn)
+    if len(url_tokens) <= 1 {
+        http.Redirect(w, r, "/bible/genesis/1", http.StatusMovedPermanently)
+        return
+    } else if len(url_tokens) == 2 {
+        http.Redirect(w, r, r.URL.Path + "/1", http.StatusMovedPermanently)
+        return
+    }
+    fmt.Printf("%s / %s\n", url_tokens[1], url_tokens[2])
+    book_name := url_tokens[1]
+    ch_num, err := strconv.Atoi(url_tokens[2])
+    if err != nil {
+        notfound(w, r)
+        return
+    }
+    ch_idx := ch_num - 1
+
+    // Get URL query parameters
+    version_params, ok := r.URL.Query()["v"]
+    disp_versions := []string{}
+    for _, request_version := range version_params {
+        is_valid := false
+        for _, v := range bible_versions {
+            if request_version == v {
+                is_valid = true
+                break
+            }
+        }
+        if is_valid {
+            disp_versions = append(disp_versions, request_version)
+        }
+    }
+    if !ok || len(disp_versions) == 0 {
+        http.Redirect(w, r, "/bible/" + book_name + "/" + strconv.Itoa(ch_num) +
+            "?v=" + default_bible_version, http.StatusMovedPermanently)
+        return
+    }
+
+
+    md, err := ioutil.ReadFile(fmt.Sprintf("%s/bible.md", template_dir))
+    if err != nil {
+        fmt.Println(err)
+        notfound(w, r)
+        return
+    }
+    s_page, template_name := standard_page_from_md(string(md), r.URL.Path)
+    t, err := get_template(template_name)
+    if err != nil {
+        internalerror(w)
+        fmt.Println(err)
+        return
+    }
+
+    verses := make([][]string, 0)
+
+    book_order := [][2]string{}
+    num_chaps := map[string]int{}
+    book_name_human := book_name
+    links_book_name := [2][2]string{{"", ""}, {"", ""}}
+    links_ch_num := [2]int{0, 0}
+    for i, v := range disp_versions {
+        fmt.Println(v)
+        content, err := ioutil.ReadFile(v + ".json")
+        if err != nil {
+            internalerror(w)
+            fmt.Println(err)
+            return
+        }
+
+        var bible Bible
+        err = json.Unmarshal(content, &bible)
+        if err != nil {
+            fmt.Println("error")
+            internalerror(w)
+            fmt.Println(err)
+            return
+        }
+        if i == 0 {
+            book_name_human = bible.Books[book_name].NameShort
+            for j, b := range bible.BookOrder {
+                book_order = append(book_order, [2]string{b, bible.Books[b].NameShort})
+                num_chaps[b] = len(bible.Books[b].Chapters)
+                if b == book_name {
+                    if ch_num > 1 {
+                        links_ch_num[0] = ch_num - 1
+                        links_book_name[0] = [2]string{book_name, book_name_human}
+                    } else if j > 0 {
+                        links_ch_num[0] = num_chaps[book_order[j - 1][0]]
+                        links_book_name[0] = [2]string{bible.BookOrder[j - 1],
+                            bible.Books[bible.BookOrder[j - 1]].NameShort}
+                    }
+                    if ch_num < num_chaps[b] {
+                        links_ch_num[1] = ch_num + 1
+                        links_book_name[1] = [2]string{book_name,
+                            book_name_human}
+                    } else if j + 1 < len(bible.BookOrder) {
+                        links_ch_num[1] = 1
+                        links_book_name[1] = [2]string{bible.BookOrder[j + 1],
+                            bible.Books[bible.BookOrder[j + 1]].NameShort}
+                    } else {
+                        fmt.Printf("%d %d\n", j + 1, ch_num);
+                        fmt.Printf("%d\n", len(book_order));
+                        fmt.Println(book_order);
+                    }
+                }
+            }
+        }
+
+        if book, book_ok := bible.Books[book_name]; book_ok {
+            if ch_idx >= 0 && ch_idx < len(book.Chapters) {
+                verses = append(verses, book.Chapters[ch_idx])
+            } else {
+                notfound(w, r)
+                return
+            }
+        } else {
+            notfound(w, r)
+            return
+        }
+    }
+    max_num_verses := 0
+    for _, v := range verses {
+        if len(v) > max_num_verses {
+            max_num_verses = len(v)
+        }
+    }
+
+    verses_disp := make([][]string, max_num_verses)
+    for i := 0; i < max_num_verses; i++ {
+        verses_disp[i] = make([]string, len(verses))
+        for j := 0; j < len(verses); j++ {
+            if i < len(verses[j]) {
+                verses_disp[i][j] = verses[j][i]
+            } else {
+                verses_disp[i][j] = ""
+            }
+        }
+    }
+
+    remove_links := make([]string, len(disp_versions))
+    for i := 0; i < len(disp_versions); i++ {
+        link := fmt.Sprintf("/bible/%s/%d?v=", book_name, ch_num)
+        for j, v_link := range disp_versions {
+            if j == i {
+                continue
+            }
+            link += v_link
+            // If we still have at least one more version to keep after this
+            if j < len(disp_versions) - 1 &&
+                (i != len(disp_versions) - 1 || j + 1 != i) {
+                link += "&v="
+            }
+        }
+        remove_links[i] = link
+    }
+
+    page := BiblePage{
+                Page: s_page,
+                AllVersions: bible_versions,
+                DisplayVersions: disp_versions,
+                BookName: [2]string{book_name, book_name_human},
+                Chapter: ch_num,
+                LinksBookName: links_book_name,
+                LinksChapter: links_ch_num,
+                BookOrder: book_order,
+                BookNumChaps: num_chaps,
+                RemoveLinks: remove_links,
+                Verses: verses_disp}
+
+    if err = t.Execute(w, &page); err != nil {
+        fmt.Println(err)
+    }
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -333,6 +547,7 @@ var (
 func main() {
     flag.Parse()
     r := http.DefaultServeMux
+    r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
     r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
     r.Handle("/" + static_url + "/", http.StripPrefix("/" + static_url + "/", http.FileServer(http.Dir(static_url))))

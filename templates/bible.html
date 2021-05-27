@@ -1,0 +1,83 @@
+{{ $dot := . }}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/bmp" href="/static/img/favicon-16.bmp"/>
+        <script>
+            var book_num_chaps = {{.BookNumChaps}};
+        </script>
+        {{.Head}}
+    </head>
+    <body onload="update_chapter_select({{.Chapter}}, true)">
+        <div class="content">
+        <div class="head" id="head">
+            <div class="links">
+                [Path: {{range $i, $a := .Links -}}
+                    {{- if $i}}/{{end -}}
+                    <a href="{{index $a 1}}">{{index $a 0}}</a>
+                    {{- end}}] [<a href="/about">about</a>] [<a href="mailto:contact@moraine.dev">contact</a>]
+            </div>
+            <span id="alerts"></span>
+        </div>
+        <div class="container">
+            <div class="nav-container">
+            <h1>{{index .BookName 1}} {{.Chapter}}</h1>
+            <div class="inline-block">
+                Nav
+                <select name="book" id="book" onchange="update_chapter_select({{.Chapter}}, false)">
+                    {{ range .BookOrder }}
+                    <option value="{{index . 0}}"{{ if eq (index . 0) (index $dot.BookName 0)}} selected {{ end }}>{{index . 1}}</option>
+                    {{ end }}
+                </select>
+                <select name="chapter" id="chapter">
+                </select>
+                <button type="button" onclick="goto_location({{.DisplayVersions}})">Go</button>
+            </div>
+            <div class="inline-block">
+                Ver
+                <select name="version" id="version">
+                    {{ range .AllVersions }}
+                    <option value="{{ . }}">{{ . }}</option>
+                    {{ end }}
+                </select>
+                <button type="button" onclick="set_version({{index .BookName 0}}, {{.Chapter}})">Set</button>
+                <button type="button" onclick="add_version({{index .BookName 0}}, {{.Chapter}})">Add</button>
+            </div>
+            </div>
+        <table>
+            <tr>
+                <th/>
+                {{ range $i, $v := .DisplayVersions }}
+                <th>[{{.}}: <a href="/static/txt/{{$v}}.txt">txt</a>{{ if gt (len $dot.DisplayVersions) 1 }}|<a href={{index $dot.RemoveLinks $i}}>del</a>{{ end }}]</th>
+                {{ end }}
+            </tr>
+            {{ range $i, $row := .Verses }}
+            <tr>
+                <td class="num">{{ inc $i }}</td>
+                {{ range $row }}
+                <td>{{ . }}</td>
+                {{ end }}
+            </tr>
+            {{ end }}
+        </table>
+        <div class="nav-container">
+            {{ range $i, $ch := .LinksChapter }}
+            {{ $bookname := index $dot.LinksBookName $i }}
+            {{ if $ch }}
+            <a style="float: {{if $i}}right{{else}}left{{end}}"
+                href="/bible/{{index $bookname 0}}/{{$ch}}?
+                {{- range $j, $s := $dot.DisplayVersions}}
+                {{- if $j}}&{{end}}v={{$s}}
+                {{- end}}">{{if not $i}}< {{end -}}
+                           {{index $bookname 1}} {{$ch -}}
+                           {{if $i}} >{{end}}</a>
+            {{ end }}
+            {{ end }}
+        </div>
+        </div>
+        </div>
+        <footer><a href=https://viralpubliclicense.org>VIRAL PUBLIC LICENSE | Copyleft (ɔ) All Rights Reversed</a></footer>
+    </body>
+    <script defer src="/static/js/bible.js"></script>
+</html>
