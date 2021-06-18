@@ -22,10 +22,11 @@ import (
     "regexp"
     "errors"
     "bytes"
+    "time"
 )
 
-const matrix_domain = "moraine.dev"
-const matrix_spawnpit_room_id = "!pJKKUIuGOwrLtmcEPc:moraine.dev"
+const matrix_domain = "deadfacade.net"
+const matrix_spawnpit_room_id = "!pJKKUIuGOwrLtmcEPc:deadfacade.net"
 const index_name = "index"
 const notfound_name = "notfound"
 const template_dir = "templates"
@@ -154,6 +155,7 @@ func place_user_in_room(matrix_domain, auth_token, user_id, room_id string) erro
 
 func get_matrix_accounts(matrix_domain, auth_token string) ([]string, error) {
     result, err := do_matrix_request(matrix_domain, auth_token, "GET", "/_synapse/admin/v2/users?guests=false", nil)
+    fmt.Println("%s %s", result, err)
     if err != nil {
         return nil, err
     }
@@ -266,6 +268,7 @@ func matrix_signup_handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func standard_page_from_md(md string, path string) (Page, string) {
+    fmt.Printf("%s: rendering page: %s\n", time.Now(), path)
     fm := front.NewMatter()
     fm.Handle("+++", front.YAMLHandler)
     template_name := default_template_name
@@ -516,6 +519,7 @@ func bible_handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Println("handler")
     md_path, need_slash_redirect := get_md_path(r.URL.Path)
     if need_slash_redirect {
         http.Redirect(w, r, r.URL.Path + "/", http.StatusMovedPermanently)
@@ -550,7 +554,7 @@ func main() {
     r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
     r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
-    r.Handle("/" + static_url + "/", http.StripPrefix("/" + static_url + "/", http.FileServer(http.Dir(static_url))))
+    //r.Handle("/" + static_url + "/", http.StripPrefix("/" + static_url + "/", http.FileServer(http.Dir(static_url))))
     var err error
     if *local != "" { // Run as a local web server
         err = http.ListenAndServe(*local, r)

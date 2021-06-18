@@ -1,6 +1,6 @@
-# moraine.dev Matrix homeserver
+# DEADFACADE Matrix homeserver
 
-Sign up for a [Matrix](https://matrix.org/) account hosted on homeserver [moraine.dev](/). You can use this account to join Matrix rooms both on and off the homeserver.
+Sign up for a [Matrix](https://matrix.org/) account hosted on this homeserver. You can use this account to join Matrix rooms both on and off the homeserver.
 
 <html>
 

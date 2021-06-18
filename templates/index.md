@@ -23,7 +23,7 @@ Welcome to my home on the World Wide Web.
 |||
 |:--|:--|
 |[Glen Canyon Archive](glen)|Documenting the now-submerged Glen Canyon|
-|[Music](music)|Music|
+|[Music](music)|Homemade music|
 |[Bible](bible)|Bible|
 |[Matrix Homeserver](matrix)|Self-hosted chatrooms using the Matrix protocol|
 |[Repositories](git)|Self-hosted `git` repositories|
@@ -31,4 +31,3 @@ Welcome to my home on the World Wide Web.
 |[Software](software)|Software|
 |Handheld Hymn Generator|A portable and durable hymn-generation device|
 |Hymn Log|A log of generated hymns|
-|Caltech BBS|A bulletin-board system for Caltech and others|
