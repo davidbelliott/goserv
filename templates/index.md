@@ -20,12 +20,11 @@ css: index.css
 
 Welcome to my home on the World Wide Web.
 
-|||
 |:--|:--|
 |[Glen Canyon Archive](glen)|Documenting the now-submerged Glen Canyon|
 |[Music](music)|Homemade music|
 |[Bible](bible)|Bible|
-|[Matrix Homeserver](matrix)|Self-hosted chatrooms using the Matrix protocol|
+|Matrix Homeserver|Self-hosted chatrooms using the Matrix protocol|
 |[Repositories](git)|Self-hosted `git` repositories|
 |[Hardware](hardware)|Hardware|
 |[Software](software)|Software|

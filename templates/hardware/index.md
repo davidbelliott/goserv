@@ -8,10 +8,9 @@ Software "engineers" who make electron apps and only know JS and Python won't su
 
 Engineering hardware is more difficult than writing software: electrons obey the laws of God, not of man. One who is given the tools of computing without true understanding will take them for granted and misuse them; such a top-down approach gives rise to the loathsome enterprise Java application. Only by working from the ground up---wave mechanics, Maxwell's equations, linear circuits, thermodynamics, semiconductor devices, analog design, digital design, FPGAs, computer architecture, machine code, assembly, higher-level languages, compilers, data structures, algorithms, information theory, operating systems, cryptography, networking, machine learning---can one hope to understand our machines, and understand what is wrong with them today.
 
-|||
 |:--|:--|
 |[XDB-333](synth)|Open-Source Analog Bass Synthesizer|
-|RFIDCAP|Pocket RFID Card Reader and Emulator|
+|[RFIDCAP](rfid)|Pocket RFID Card Reader and Emulator|
 |HYMNGEN|Portable and durable hymn-generation device|
 |BURZUM|Miniature full-featured analog function generator|
 |HOMESTEAD|Open-source, modular, and privacy-focused smart home hub|
