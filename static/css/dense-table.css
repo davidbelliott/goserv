@@ -1,0 +1,11 @@
+th {
+        text-align: left;
+        border: none;
+        padding: 0 0.4em 1em;
+}
+
+td {
+        text-align: left;
+        border: none;
+        padding: 0 0.4em;
+}

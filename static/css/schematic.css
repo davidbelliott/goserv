@@ -1,0 +1,13 @@
+@import "style.css";
+
+.sch-container {
+    width: 100%;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.sch-container > object {
+    width: 100%;
+    height: auto;
+    border: 1px solid;
+}

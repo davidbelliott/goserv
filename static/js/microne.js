@@ -44,14 +44,14 @@ function Microne(parent_el, this_idx) {
 	_apply_style(this.el, {
 		width: '100%',
 		height: '100%',
-		border: '1px solid black',
+		border: '1px solid',
 		cursor: 'auto',
 		position: 'relative'
 	})
 
 	this.fill_el = document.createElement('div')
 	_apply_style(this.fill_el, {
-		background: 'lightblue',
+		background: 'blue',
 		height: '100%',
 		width: '0%',
 		pointerEvents: 'none'
@@ -59,6 +59,7 @@ function Microne(parent_el, this_idx) {
 	this.el.appendChild(this.fill_el)
 
 	this.play_button = document.createElement('a')
+        this.play_button.className = 'play-button'
 	this.play_button.innerHTML = this.p_char
 	_apply_style(this.play_button, {
 		cursor: 'pointer',

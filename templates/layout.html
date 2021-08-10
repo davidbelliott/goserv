@@ -9,10 +9,10 @@
         <div class="content">
         <div class="head" id="head">
             <div class="links">
-                [Path: {{range $i, $a := .Links -}}
+                [path: {{range $i, $a := .Links -}}
                     {{- if $i}}/{{end -}}
                     <a href="{{index $a 1}}">{{index $a 0}}</a>
-                    {{- end}}] [<a href="/about">about</a>] [<a href="mailto:contact@deadfacade.net">contact</a>]
+                    {{- end}}] [<a href="/about">about</a>] [light/dark]
             </div>
             <span id="alerts"></span>
         </div>

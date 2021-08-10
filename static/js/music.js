@@ -12,7 +12,7 @@ function p10a_init(scene, camera) {
     const basic_mat = new THREE.MeshBasicMaterial( { color: "red" } );
     p10a.wireframe = new THREE.EdgesGeometry(p10a.geometry);
     p10a.orig_wireframe = p10a.wireframe.clone();
-    const wireframe_mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 1, depthTest: false} );
+    const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthTest: false} );
     p10a.poly = new THREE.Mesh(p10a.geometry, basic_mat);
     p10a.poly.add(new THREE.LineSegments(p10a.wireframe, wireframe_mat));
     scene.add( p10a.poly );
@@ -65,13 +65,13 @@ function p8b_init(scene, camera) {
     const basic_mat = new THREE.MeshBasicMaterial( { color: "salmon" } );
     p8b.wireframe = new THREE.EdgesGeometry(p8b.geometry);
     p8b.orig_wireframe = p8b.wireframe.clone();
-    const wireframe_mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 1, depthTest: false} );
+    const wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1, depthTest: false} );
     p8b.poly = new THREE.Mesh(p8b.geometry, basic_mat);
     p8b.poly.add(new THREE.LineSegments(p8b.wireframe, wireframe_mat));
     scene.add( p8b.poly );
 
     p8b.cube_geom = new THREE.BoxGeometry(0.5);//0.5, 0.5, 0.5);
-    const cube_mat = new THREE.MeshBasicMaterial( { color: "black", transparent: true, opacity: 1.0} );
+    const cube_mat = new THREE.MeshBasicMaterial( { color: "white", transparent: true, opacity: 1.0} );
     p8b.cubes = new THREE.InstancedMesh(p8b.cube_geom, cube_mat, 64);
     for (let i = 0; i < 64; i++) {
         let phi = Math.random() * Math.PI * 2;  // 0-360
@@ -148,11 +148,9 @@ function p8b_updt(paused, song_time, ch_amps) {
     }
 }
 
-tracks = ["p10-a", "p8-b", "p7-c", "p6-a", "p5-a", "p4-b"];
-init_funcs =    [p10a_init, p8b_init];
-update_funcs =  [p10a_updt, p8b_updt];
+init_funcs =    [p13a_init, p10a_init, p8b_init];
+update_funcs =  [p13a_updt, p10a_updt, p8b_updt];
 
-var players = populate_tracks(tracks, true);
 players.forEach(player => {
     player.on("pause", stellated_pause);
     player.on("play", stellated_play);

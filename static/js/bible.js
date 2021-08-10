@@ -5,7 +5,13 @@ function set_version(book, ch) {
 
 function add_version(book, ch) {
     var version = document.getElementById('version').value;
-    window.location.href = window.location.href + "&v=" + version;
+    var url_no_target = window.location.href.split(/#(.+)/)[0]
+    var url_target = window.location.href.split(/#(.+)/)[1]
+    var new_href = url_no_target + "&v=" + version;
+    if (url_target) {
+        new_href += "#" + url_target;
+    }
+    window.location.href = new_href;
 }
 
 function goto_location(disp_vers) {

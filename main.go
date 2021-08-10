@@ -6,10 +6,12 @@ import (
     "strings"
     "strconv"
     "log"
+    "encoding/csv"
     "encoding/json"
     "io"
     "io/ioutil"
     "os"
+    "os/exec"
     "github.com/gomarkdown/markdown"
     "github.com/gomarkdown/markdown/html"
     "github.com/gomarkdown/markdown/parser"
@@ -24,6 +26,9 @@ import (
     "bytes"
     "time"
 )
+
+const valid_users_user_col = 0
+const valid_users_password_col = 1
 
 const matrix_domain = "deadfacade.net"
 const matrix_spawnpit_room_id = "!pJKKUIuGOwrLtmcEPc:deadfacade.net"
@@ -389,6 +394,7 @@ func bible_handler(w http.ResponseWriter, r *http.Request) {
         notfound(w, r)
         return
     }
+
     s_page, template_name := standard_page_from_md(string(md), r.URL.Path)
     t, err := get_template(template_name)
     if err != nil {
@@ -497,6 +503,8 @@ func bible_handler(w http.ResponseWriter, r *http.Request) {
                 link += "&v="
             }
         }
+        fmt.Println(r.URL.Path)
+        link += r.URL.Fragment
         remove_links[i] = link
     }
 
@@ -518,9 +526,41 @@ func bible_handler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("handler")
-    md_path, need_slash_redirect := get_md_path(r.URL.Path)
+func todo_do_handler(w http.ResponseWriter, r *http.Request) {
+    items, ok := r.URL.Query()["i"]
+    if ok && len(items) > 0 {
+        args := append([]string{"-x"}, items...)
+        cmd := exec.Command("todo", args...)
+        _, err := cmd.Output()
+        if err != nil {
+            fmt.Println(err)
+        }
+    }
+    http.Redirect(w, r, "/todo", http.StatusSeeOther)
+}
+
+func todo_handler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        fmt.Println("Todo POST handler")
+        r.ParseForm()
+        items, ok := r.Form["item-todo"]
+        if !(ok && len(items) == 1) {
+            fmt.Println("Form submit bad request\n")
+            w.WriteHeader(http.StatusBadRequest)
+            return
+        }
+        item := items[0]
+        cmd := exec.Command("todo", item)
+        _, err := cmd.Output()
+        if err != nil {
+            fmt.Println(err)
+        }
+    }
+    show_page_at_url(r.URL.Path, w, r)
+}
+
+func show_page_at_url(url_path string, w http.ResponseWriter, r *http.Request) {
+    md_path, need_slash_redirect := get_md_path(url_path)
     if need_slash_redirect {
         http.Redirect(w, r, r.URL.Path + "/", http.StatusMovedPermanently)
         return
@@ -542,6 +582,46 @@ func handler(w http.ResponseWriter, r *http.Request) {
     t.Execute(w, &page)
 }
 
+func handler(w http.ResponseWriter, r *http.Request) {
+    show_page_at_url(r.URL.Path, w, r)
+}
+
+func load_valid_users(filepath string) (map[string]string, error) {
+    f, err := os.Open(filepath)
+    if err != nil {
+        return nil, err
+    }
+    lines, err := csv.NewReader(f).ReadAll()
+    if err != nil {
+        return nil, err
+    }
+    valid_users := make(map[string]string, len(lines))
+    for _, line := range lines {
+        if len(line) != 2 {
+            return nil, errors.New("invalid entry in valid users file")
+        }
+        valid_users[line[valid_users_user_col]] = line[valid_users_password_col]
+    }
+    return valid_users, nil
+}
+
+func basic_auth(handler http.HandlerFunc, valid_users map[string]string,
+    realm string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        user, pass, auth_ok := r.BasicAuth()
+
+        user_pw, user_ok := valid_users[user]
+
+        if !auth_ok || !user_ok || pass != user_pw {
+            w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
+            w.WriteHeader(401)
+            w.Write([]byte("Unauthorised.\n"))
+            return
+        }
+        handler(w, r)
+    }
+}
+
 var (
     local = flag.String("local", "", "serve as webserver, example: 0.0.0.0:8000")
     tcp   = flag.String("tcp", "", "serve as FCGI via TCP, example: 0.0.0.0:8000")
@@ -550,8 +630,14 @@ var (
 
 func main() {
     flag.Parse()
+    valid_users, user_err := load_valid_users("instance/valid_users.csv")
+    if user_err != nil {
+        log.Fatal(user_err)
+    }
     r := http.DefaultServeMux
     r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
+    r.HandleFunc("/todo", basic_auth(todo_handler, valid_users, "todo"))
+    r.HandleFunc("/todo/do", basic_auth(todo_do_handler, valid_users, "todo"))
     r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
     //r.Handle("/" + static_url + "/", http.StripPrefix("/" + static_url + "/", http.FileServer(http.Dir(static_url))))

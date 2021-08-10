@@ -4,9 +4,9 @@
 
 <html>
 
-<canvas id="stellated" class="outline"></canvas>
+<div id="stellated-loading" class="outline">Loading...</div>
 
-[Making a sick beat](beat)
+SIKKKKKK BEATS MAN!
 
 ## Asphalt Gomidas
 
@@ -14,8 +14,10 @@
 
 <div id="tracks"></div>
 
+<script src="/static/js/microne.js"></script>
+<script src="/static/js/music-initial.js"></script>
+<script src="/static/js/songs/p13a.js"></script>
 <script defer src="/static/js/three.js"></script>
-<script defer src="/static/js/microne.js"></script>
 <script defer src="/static/js/stellated.js"></script>
 <script defer src="/static/js/music.js"></script>
 

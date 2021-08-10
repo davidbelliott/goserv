@@ -1,11 +1,5 @@
 @import "style.css"; 
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
 th, td {
-    border-bottom: 1px solid black;
+    border: 1px solid;
 }
-

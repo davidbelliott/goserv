@@ -1,10 +1,11 @@
-const max_ampl = 32767;
-const canvas = document.getElementById("stellated");
-const video_latency = 0.07; // how much the video typically lags the audio
+const MAX_AMPL = 32767;
+const VIDEO_LATENCY = 0.07; // how much the video typically lags the audio
+const BIN_RES = 126;
 
 var scenes = null;
 const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
 
+var canvas = null;
 var renderer = null;
 const clock = new THREE.Clock(false);
 
@@ -48,8 +49,11 @@ function init() {
             num_chs[i] = init_funcs[i](scenes[i], camera);
         }
     }
+    var canvas_placeholder = document.getElementById("stellated-loading");
+    canvas = document.createElement('canvas', id='stellated');
+    canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
     renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
-    renderer.setClearColor("lightgoldenrodyellow");
+    renderer.setClearColor("black");
     renderer.setPixelRatio( window.devicePixelRatio );
 }
 
@@ -58,14 +62,14 @@ function load_envelopes() {
     for (var i = 0; i < tracks.length; i++) {
         if (init_funcs[i] != null) {
             var oreq = new XMLHttpRequest();
-            oreq.open("GET", "/static/wav/" + tracks[i] + ".bin", true);
+            oreq.open("GET", "/static/wav/" + tracks[i] + ".bin");
             oreq.responseType = "arraybuffer";
             oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, i));
             oreq.send();
         }
     }
     var oreq = new XMLHttpRequest();
-    oreq.open("GET", "/static/wav/freq.bin", true);
+    oreq.open("GET", "/static/wav/freq.bin");
     oreq.responseType = "arraybuffer";
     oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, tracks.length, true));
     oreq.send();
@@ -101,12 +105,12 @@ function get_ampl(song_time, ch) {
         return 0;
     }
     let ch_offset = Math.floor(envelope.length * ch / num_chs[now_playing_idx]);
-    let val = envelope[ch_offset + Math.floor(song_time * 126)];
+    let val = envelope[ch_offset + Math.floor(song_time * BIN_RES)];
     if (val == 0) {
         return val;
     }
-    let scaled = 0.5 * Math.log(val) / Math.log(max_ampl) +
-                    0.5 * val / max_ampl;
+    let scaled = 0.5 * Math.log(val) / Math.log(MAX_AMPL) +
+                    0.5 * val / MAX_AMPL;
     return scaled;
 }
 
@@ -123,7 +127,7 @@ function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
     // look up the size the canvas is being displayed
     const width = canvas.clientWidth;
-    const height = 0.5*width;//canvas.clientHeight;
+    const height = width;//canvas.clientHeight;
 
     // adjust displayBuffer size to match
     if (canvas.width !== width || canvas.height !== height) {
@@ -164,7 +168,7 @@ const animate = function () {
     requestAnimationFrame( animate );
     if (!paused) {
         var song_time_raw = clock.getElapsedTime() + last_known_song_time;
-        song_time = Math.min(Math.max(song_time_raw + video_latency, 0.0), all_players[now_playing_idx].audio.duration);
+        song_time = Math.min(Math.max(song_time_raw + VIDEO_LATENCY, 0.0), all_players[now_playing_idx].audio.duration);
     }
 
     resizeCanvasToDisplaySize();

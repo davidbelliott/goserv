@@ -6,8 +6,48 @@
 
 body {
     margin: 0;
-    background-color: lightgoldenrodyellow;
+    background-color: black;
+    color: yellow;
     font-family: monospace;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+a {
+    color: white;
+}
+
+/* unvisited link */
+a:link {
+    background-color: blue;
+}
+
+/* visited link */
+a:visited {
+    background-color: purple;
+}
+
+/* mouse over link */
+a:hover {
+    background-color: red;
+}
+
+/* selected link */
+a:active {
+    color: cyan;
+}
+
+.play-button {
+    color: yellow;
+    background-color: transparent;
+}
+
+.play-button:hover {
+    background-color: transparent;
+    color: red;
 }
 
 table {
@@ -25,6 +65,15 @@ th, td {
 canvas {
     width: 100%;
     display: block;
+    border: 1px solid;
+}
+
+#stellated-loading {
+    width: 100%;
+    text-align: center;
+    padding-top: calc(50% - 0.5rem);
+    padding-bottom: calc(50% - 0.5rem);
+    border: 1px solid;
 }
 
 blockquote {
@@ -49,7 +98,7 @@ hr {
 }
 
 .content {
-    min-height: 100vh;
+    min-height: calc(100vh - 1rem - 10px);
     padding-bottom: 20px;
 }
 
@@ -63,19 +112,19 @@ hr {
     top: 0;
     left: 0;
     width: 100%;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid;
     text-align: left;
     padding: 5px 20px;
     font-family: monospace;
 }
 
 .outline {
-    border: 1px solid black;
+    border: 1px solid;
 }
 
 footer {
     width: 100%;
-    border-top: 1px solid black;
+    border-top: 1px solid;
     text-align: center;
     padding: 5px 20px;
     font-family: monospace;
@@ -99,17 +148,17 @@ figure {
 }
 
 figure > img {
-    border: 1px solid black;
+    border: 1px solid;
     max-width: 100%;
 }
 
 input {
-    border: 1px solid black;
+    border: 1px solid;
     font-family: inherit;
 }
 
 textarea {
-    border: 1px solid black;
+    border: 1px solid;
     width: 100%;
     max-width: 100%;
     resize: vertical;
@@ -118,14 +167,35 @@ textarea {
 
 select {
     height: 1.3rem;
-    border: 1px solid black;
-    background-color: white;
+    border: 1px solid;
+    background-color: black;
+    color: yellow;
     font-family: inherit;
 }
 
 button {
-    border: 1px solid black;
+    border: 1px solid;
+    background-color: black;
+    color: yellow;
     font-family: inherit;
+}
+
+input {
+    border: 1px solid;
+    background-color: black;
+    color: yellow;
+}
+
+.flex-box {
+    display: flex;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.small-margin-r {
+    margin-right: 10px;
 }
 
 .player {

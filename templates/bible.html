@@ -16,7 +16,7 @@
                 [Path: {{range $i, $a := .Links -}}
                     {{- if $i}}/{{end -}}
                     <a href="{{index $a 1}}">{{index $a 0}}</a>
-                    {{- end}}] [<a href="/about">about</a>] [<a href="mailto:contact@deadfacade.net">contact</a>]
+                    {{- end}}] [<a href="/about">about</a>]
             </div>
             <span id="alerts"></span>
         </div>
@@ -53,10 +53,10 @@
                 {{ end }}
             </tr>
             {{ range $i, $row := .Verses }}
-            <tr>
-                <td class="num">{{ inc $i }}</td>
+            <tr id="{{ inc $i }}">
+                <td class="num"><a href="#{{ inc $i }}">{{ inc $i }}</a></td>
                 {{ range $row }}
-                <td>{{ . }}</td>
+                <td class="verse">{{ . }}</td>
                 {{ end }}
             </tr>
             {{ end }}
