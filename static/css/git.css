@@ -43,6 +43,7 @@ th, td {
 
 table {
         margin: unset;
+        border-collapse: unset;
 }
 
 table thead td {
@@ -63,7 +64,7 @@ table td {
 #index tr:hover td,
 #log tr:hover td,
 #files tr:hover td {
-	background-color: lightblue;
+	background-color: darkblue;
 }
 
 #index tr td:nth-child(2),
