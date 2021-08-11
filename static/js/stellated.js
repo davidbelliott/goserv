@@ -41,6 +41,12 @@ class LoadEnvelopeCallback {
 
 function init() {
     load_envelopes();
+    var canvas_placeholder = document.getElementById("stellated-loading");
+    canvas = document.createElement('canvas', id='stellated');
+    canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
+    renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
+    renderer.setClearColor("black");
+    renderer.setPixelRatio( window.devicePixelRatio );
     scenes = Array(tracks.length).fill(null);
     num_chs = Array(tracks.length).fill(0);
     for (var i = 0; i < tracks.length; i++) {
@@ -49,12 +55,6 @@ function init() {
             num_chs[i] = init_funcs[i](scenes[i], camera);
         }
     }
-    var canvas_placeholder = document.getElementById("stellated-loading");
-    canvas = document.createElement('canvas', id='stellated');
-    canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
-    renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
-    renderer.setClearColor("black");
-    renderer.setPixelRatio( window.devicePixelRatio );
 }
 
 function load_envelopes() {

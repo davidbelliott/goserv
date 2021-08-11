@@ -10,14 +10,15 @@ const p13a = {
 }
 
 function p13a_init(scene, camera) {
+    //renderer.context.disable(renderer.context.DEPTH_TEST);
     p13a.cubes_group = new THREE.Group();
     for (const i in p13a.kick_cubes_base_y) {
         let geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
         let wireframe = new THREE.EdgesGeometry(new THREE.BoxGeometry());
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1} );
-        const basic_mat = new THREE.MeshBasicMaterial( { color: "purple" } );
-        let mesh = new THREE.Mesh(geometry, basic_mat);
-        mesh.add(new THREE.LineSegments(wireframe, wireframe_mat));
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
+        const basic_mat = new THREE.MeshBasicMaterial( { color: "purple", depthFunc: THREE.LessEqualDepth } );
+        let mesh = new THREE.LineSegments(wireframe, wireframe_mat);
+        mesh.add(new THREE.Mesh(geometry, basic_mat));
         mesh.position.set(0, p13a.kick_cubes_base_y[i], 0);
         p13a.kick_cubes.push(mesh);
         p13a.cubes_group.add(mesh);
@@ -25,7 +26,7 @@ function p13a_init(scene, camera) {
     for (const i in p13a.snare_pyramids_base_x) {
         let geometry = new THREE.ConeGeometry(1, 0.5, 4);
         let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1} );
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
         let mesh = new THREE.LineSegments(wireframe, wireframe_mat);
         mesh.position.set(p13a.snare_pyramids_base_x[i] + 2 * i - 1, 0, 0);
         mesh.rotation.set(0, 0, Math.PI / 2 * (i * -2 + 1));
@@ -36,7 +37,7 @@ function p13a_init(scene, camera) {
         let dim = p13a.kick_cubes_base_y[1] - p13a.kick_cubes_base_y[0] - 1;
         let geometry = new THREE.BoxGeometry(2, dim, 2);
         let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1} );
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
         p13a.kick_rect_prism = new THREE.LineSegments(wireframe, wireframe_mat);
         p13a.cubes_group.add(p13a.kick_rect_prism);
     }
@@ -44,22 +45,22 @@ function p13a_init(scene, camera) {
         let dim = p13a.kick_cubes_base_y[1] - p13a.kick_cubes_base_y[0] - 1;
         let geometry = new THREE.BoxGeometry(dim, 2, 2);
         let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1} );
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
         big_snare_cube = new THREE.LineSegments(wireframe, wireframe_mat);
         p13a.cubes_group.add(big_snare_cube);
     }
     {
         let geometry = new THREE.BoxGeometry(2, 2, 2);
         let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthTest: false} );
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth} );
         center_cube = new THREE.LineSegments(wireframe, wireframe_mat);
         p13a.cubes_group.add(center_cube);
     }
     {
         let geometry = new THREE.IcosahedronGeometry();
-        const basic_mat = new THREE.MeshBasicMaterial( { color: "red" } );
+        const basic_mat = new THREE.MeshBasicMaterial( { color: "red", depthFunc: THREE.LessEqualDepth } );
         let wireframe = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.5));
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthTest: false} );
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
         p13a.icos = new THREE.Mesh(geometry, basic_mat);
         p13a.icos.add(new THREE.LineSegments(wireframe, wireframe_mat));
     }
