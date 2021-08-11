@@ -20,24 +20,21 @@ img {
 	border: 0;
 }
 
-a:target {
-	background-color: #ccc;
+a.d, a.h, a.i {
+	text-decoration: none;
+        background-color: unset;
 }
 
-a.d,
-a.h,
-a.i,
-a.line {
-	text-decoration: none;
+a.line:target, a:target {
+    background-color: darkblue;
+}
+
+a.line:visited {
+    background-color: inherit;
 }
 
 #blob a {
-	color: #555;
-}
-
-#blob a:hover {
-	color: blue;
-	text-decoration: none;
+        text-decoration: none;
 }
 
 th, td {
@@ -91,19 +88,19 @@ pre {
 }
 
 pre a.h {
-	color: #00a;
+	color: cyan;
 }
 
 .A,
 span.i,
 pre a.i {
-	color: #070;
+	color: lime;
 }
 
 .D,
 span.d,
 pre a.d {
-	color: #e00;
+	color: red;
 }
 
 pre a.h:hover,

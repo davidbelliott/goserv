@@ -35,11 +35,6 @@ a:hover {
     background-color: red;
 }
 
-/* selected link */
-a:active {
-    color: cyan;
-}
-
 .play-button {
     color: yellow;
     background-color: transparent;
@@ -92,8 +87,7 @@ sub {
 
 hr {
     border: none;
-    background-color: black;
-    color: black;
+    background-color: currentcolor;
     height: 1px
 }
 
