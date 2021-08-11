@@ -12,7 +12,6 @@ First time I ate mala thought It was some waste chemicals, Now Im experiencing n
 |[dons.directory](http://dons.directory)|@Hot_Domme|
 |[edith.reisen](http://edith.reisen)|Miya|
 |[exo-science.com](http://exo-science.com)|@NgoloTesla|
-|[cyberdoxology.com](http://cyberdoxology.com)|@cyberdoxology|
 |[3dtestosterone.net](http://3dtestosterone.net)|@FODKORP|
 |[soma.cx](http://soma.cx)|@milkonaut|
 |[remilia.org](http://remilia.org)| |
