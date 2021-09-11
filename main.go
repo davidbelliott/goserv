@@ -556,7 +556,7 @@ func todo_handler(w http.ResponseWriter, r *http.Request) {
             fmt.Println(err)
         }
     }
-    cmd := exec.Command("update-latest")
+    //cmd := exec.Command("update-latest")
     show_page_at_url(r.URL.Path, w, r)
 }
 

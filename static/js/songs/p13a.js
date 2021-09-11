@@ -1,3 +1,5 @@
+import * as THREE from '/static/js/three.js/build/three.module.js';
+
 const p13a = {
     kick_cubes: [],
     kick_cubes_base_y: [-2.5, 2.5],
@@ -9,7 +11,7 @@ const p13a = {
     icos: null
 }
 
-function p13a_init(scene, camera) {
+export function init(scene, camera) {
     //renderer.context.disable(renderer.context.DEPTH_TEST);
     p13a.cubes_group = new THREE.Group();
     for (const i in p13a.kick_cubes_base_y) {
@@ -46,14 +48,14 @@ function p13a_init(scene, camera) {
         let geometry = new THREE.BoxGeometry(dim, 2, 2);
         let wireframe = new THREE.EdgesGeometry(geometry);
         const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
-        big_snare_cube = new THREE.LineSegments(wireframe, wireframe_mat);
+        let big_snare_cube = new THREE.LineSegments(wireframe, wireframe_mat);
         p13a.cubes_group.add(big_snare_cube);
     }
     {
         let geometry = new THREE.BoxGeometry(2, 2, 2);
         let wireframe = new THREE.EdgesGeometry(geometry);
         const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth} );
-        center_cube = new THREE.LineSegments(wireframe, wireframe_mat);
+        let center_cube = new THREE.LineSegments(wireframe, wireframe_mat);
         p13a.cubes_group.add(center_cube);
     }
     {
@@ -71,7 +73,7 @@ function p13a_init(scene, camera) {
     return 5;
 }
 
-function p13a_updt(paused, song_time, ch_amps) {
+export function updt(paused, song_time, ch_amps) {
     if (!paused) {
         p13a.cubes_group.rotation.y += 0.02;
         p13a.cubes_group.rotation.z += 0.005;

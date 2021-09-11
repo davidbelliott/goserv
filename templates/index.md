@@ -11,11 +11,7 @@ css: index.css
 <div id="tracks"></div>
 
 <script src="/static/js/microne.js"></script>
-<script src="/static/js/index-music.js"></script>
-<script defer src="/static/js/three.js"></script>
-<script defer src="/static/js/stellated.js"></script>
-<script defer src="/static/js/songs/p13a.js"></script>
-<script defer src="/static/js/index.js"></script>
+<script type="module" src="/static/js/index.js"></script>
 
 </html>
 

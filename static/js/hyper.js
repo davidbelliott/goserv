@@ -1,11 +1,14 @@
-var scenes = null;
+import * as THREE from '/static/js/three.js/build/three.module.js';
+import * as stellated from '/static/js/stellated.js';
+import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.js';
+
 var cur_scene_idx = 0;
 //const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
-const camera = new THREE.OrthographicCamera( 7, -7, 7, -7, -7, 1000);
+stellated.set_cam(new THREE.OrthographicCamera( 7, -7, 7, -7, -7, 1000));
 
-var canvas = null;
-var renderer = null;
-const clock = new THREE.Clock(false);
+//var canvas = null;
+//var renderer = null;
+//const clock = new THREE.Clock(false);
 
 var mesh = null;
 var cube_started = false;
@@ -18,6 +21,10 @@ var pans = null;
 var gain = null;
 
 var n_dimensions = null;
+
+const bpm = 150;
+
+const move_clock = new THREE.Clock(false);
 
 function playNote(osc_idx, frequency) {
     oscs[osc_idx].type = 'sine';
@@ -78,7 +85,10 @@ const demo = {
     ],
     cubes_group: null,
     all_group: null,
+    feet: [null, null],
+    triguy_group: null,
 }
+
 
 function init_demo(scene, camera) {
     demo.cubes_group = new THREE.Group();
@@ -86,6 +96,9 @@ function init_demo(scene, camera) {
     for (const i in demo.cubes) {
         let mesh = demo.cubes[i].create();
         demo.cubes_group.add(mesh);
+        if (i == 6 || i == 7) {
+            demo.feet[i-6] = mesh;
+        }
     }
     for (const i in demo.lines) {
         let line = demo.lines[i].create();
@@ -160,19 +173,41 @@ function init_demo(scene, camera) {
         demo.icos.add(new THREE.LineSegments(wireframe, wireframe_mat));
     }
     scene.add(demo.icos);*/
+    demo.all_group.add(demo.cubes_group);
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
+            if (i == 1 && j == 1) {
+                continue;
+            }
             let clone = demo.cubes_group.clone();
             const spacing = 7;
             clone.position.set((i - 1) * spacing, 0, (j - 1) * spacing);
             demo.all_group.add(clone);
         }
     }
-    //demo.all_group.add(demo.cubes_group);
     scene.add(demo.all_group);
 
+    demo.triguy_group = new THREE.Group();
+    let loader = new GLTFLoader();
+    loader.load( 'static/obj/triguy.glb', function ( gltf ) {
+        console.log(gltf.scene);
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1 } );
+        for (var i in gltf.scene.children) {
+            let edges = new THREE.EdgesGeometry(gltf.scene.children[i].geometry, 30);
+            let mesh = new THREE.LineSegments(edges, wireframe_mat);
+            demo.triguy_group.add(mesh);
+            demo.triguy_group.position.set(0, 4, 0);
+            demo.triguy_group.scale.set(2.0, 2.0, 2.0);
+            demo.triguy_group.rotation.set(Math.PI / 2.0, 0, 0);
+        }
+        //const lseg = new THREE.LineSegments(gltf.scene, wireframe_mat);
+	demo.all_group.add(demo.triguy_group);
+    }, undefined, function ( error ) {
+            console.error( error );
+    } );
+
     camera.position.set(0, 0, 8);
-    return 5;
+    return 4;
 }
 
 function init_cube_projection(scene, camera) {
@@ -242,9 +277,6 @@ function rand_int(max) {
     return Math.floor(Math.random() * max);
 }
 
-function start_demo(scene, camera) {
-}
-
 function arr_eq(a, b) {
     if (a.length != b.length) {
         return false;
@@ -257,95 +289,96 @@ function arr_eq(a, b) {
     return true;
 }
 
-var total_elapsed = 0;
+var start_rot = [0, 0];
 var target_rot = [0, 0];
 var go_to_target = false;
-var rot = [0, 0];
-function update_demo(scene, camera) {
-    const div = 256;
+var rot = [0, 0];       // rotation in divs
+var ang_vel = [0, 0];   // angular velocity in divs per second
+let song_beat_prev = 0;
+function update_demo(paused, song_time, ch_amps) {
+    const div = 512;    // # of divisions per pi radians
     const float_rate = 1;
     const track_rate = 2;
-    const snap_mult = 64;       // must be multiple of track_rate
-    /*let rot = [Math.floor(demo.all_group.rotation.x * div / Math.PI),
-        Math.floor(demo.all_group.rotation.x * div / Math.PI)];*/
-    if (total_elapsed % div == 0) {// && rand_int(2) == 0) {
-        target_rot = [rot[0] + (rand_int(3) - 1) * snap_mult, rot[1] + (rand_int(3) - 1) * snap_mult];
-        go_to_target = true;
+    const snap_mult = 64;
+
+    const beats_per_sec = bpm / 60.0;
+    const song_beat = Math.floor(song_time * beats_per_sec);
+
+    if (song_beat != song_beat_prev) {// && rand_int(2) == 0) {
+        if (song_beat % 2 == 0) {
+            for (var i = 0; i < 2; i++) {
+                start_rot[i] = Math.round(rot[i] / snap_mult) * snap_mult;
+            }
+            let motion_idx = rand_int(8);   // -1, 0, 1 about 2 axes, but no 0, 0
+            if (motion_idx > 3) {
+                motion_idx += 1;            // make it 0-8 (9 options) for ease
+            }
+            let rot_dirs = [motion_idx % 3 - 1, Math.floor(motion_idx / 3) - 1];
+            target_rot = [(Math.round(start_rot[0] / snap_mult) + rot_dirs[0]) * snap_mult,
+                (Math.round(start_rot[1] / snap_mult) + rot_dirs[1]) * snap_mult];
+            go_to_target = true;
+            move_clock.start();
+        }
     }
-    if (go_to_target && !arr_eq(rot, target_rot)) {
-        rot[0] += Math.sign(target_rot[0] - rot[0]);
-        rot[1] += Math.sign(target_rot[1] - rot[1]);
-    } else {
-        rot[0] += float_rate;
-        rot[1] += float_rate;
-        go_to_target = false;
+
+    if (go_to_target) {
+        const num_track_beats = 2;
+        let elapsed = move_clock.getElapsedTime();
+        console.log(elapsed);
+        for (var i = 0; i < 2; i++) {
+            ang_vel = (target_rot[i] - start_rot[i]) * beats_per_sec / num_track_beats;
+            const sign_before = Math.sign(target_rot[i] - rot[i]);
+            rot[i] = start_rot[i] + ang_vel * elapsed;
+            const sign_after = Math.sign(target_rot[i] - rot[i]);
+            if (sign_after != sign_before) {
+                rot[i] = target_rot[i];
+            }
+        }
+        if (arr_eq(rot, target_rot)) {
+            /*for (var i = 0; i < 2; i++) {
+                rot[i] = target_rot[i];
+            }*/
+            go_to_target = false;
+        }
     }
+
+    if (!paused) {
+        //for (let i = 0; i < 1; i++) {
+            //console.log(ch_amps[2 * i]);
+            demo.feet[0].position.y = -2 + 0.75 * ch_amps[0];
+            demo.feet[0].position.z = -0.5 + ch_amps[1];
+            demo.feet[1].position.y = -2 + 0.75 * ch_amps[2];
+            demo.feet[1].position.z = -0.5 + ch_amps[3];
+        //}
+    }
+    //demo.cubes_group.rotation.y = Math.pow((1 - Math.sin((song_time / 60.0 * 110 * 2) * Math.PI)) / 2, 2) * Math.PI / 32;
     demo.all_group.rotation.x = rot[0] * Math.PI / div;
     demo.all_group.rotation.y = rot[1] * Math.PI / div;
-    total_elapsed += 1;
+    //total_elapsed += 1;
+    song_beat_prev = song_beat;
 }
 
-scene_names = ['cube', 'demo'];
-init_funcs = [init_cube_projection, init_demo];
-start_funcs = [start_cube_projection, start_demo];
-update_funcs = [update_cube_projection, update_demo];
+var scene_names = ['cube', 'demo'];
+var init_funcs = [init_demo];
+var update_funcs = [update_demo];
 
-function init() {
-    var canvas_placeholder = document.getElementById("stellated-loading");
-    canvas = document.createElement('canvas', id='stellated');
-    canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
-    renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
-    renderer.setClearColor("black");
-    renderer.setPixelRatio( window.devicePixelRatio );
-    scenes = Array(init_funcs.length).fill(null);
-    for (var i = 0; i < scenes.length; i++) {
-        scenes[i] = new THREE.Scene();
-        init_funcs[i](scenes[i], camera);
-    }
-    cur_scene_idx = 0;
+function animate() {
+    stellated.frame(update_funcs);
+    window.requestAnimationFrame(animate);
 }
 
-function webgl_available() {
-    try {
-        var canvas = document.createElement( 'canvas' );
-        return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
-    } catch ( e ) {
-        return false;
-    }
-}
+var tracks = ["p16-b"];
+var player = populate_tracks(tracks, false)[0];
 
-function resizeCanvasToDisplaySize() {
-    const canvas = renderer.domElement;
-    // look up the size the canvas is being displayed
-    const width = canvas.clientWidth;
-    const height = width;//canvas.clientHeight;
+player.on("pause", stellated.pause);
+player.on("play", stellated.play);
+player.on("playing", stellated.play);
+player.on("seeked", stellated.seeked);
+player.on("waiting", stellated.pause);
+player.on("timeupdate", stellated.time_update);
 
-    // adjust displayBuffer size to match
-    if (canvas.width !== width || canvas.height !== height) {
-        // you must pass false here or three.js sadly fights the browser
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+stellated.init(tracks, init_funcs);
 
-        // update any render target sizes here
-    }
-}
-
-function start_scene(scene_name) {
-    cur_scene_idx = scene_names.indexOf(scene_name);
-    start_funcs[cur_scene_idx](scenes[cur_scene_idx], camera);
-    clock.start();
-}
-
-const animate = function () {
-    requestAnimationFrame( animate );
-    resizeCanvasToDisplaySize();
-    update_funcs[cur_scene_idx](scenes[cur_scene_idx], camera);
-    renderer.render(scenes[cur_scene_idx], camera);
-};
-
-init();
-
-if (webgl_available()) {
+if (stellated.webgl_available()) {
     animate();
 }

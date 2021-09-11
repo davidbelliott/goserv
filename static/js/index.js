@@ -1,3 +1,5 @@
+import * as stellated from '/static/js/stellated.js';
+import * as p13a from '/static/js/songs/p13a.js';
 /*var kick_cubes = [];
 var kick_cubes_base_y = [-2.5, 2.5];
 var kick_rect_prism = null;
@@ -93,18 +95,26 @@ function p13a_updt(paused, song_time, ch_amps) {
     icos.rotation.y = cubes_group.rotation.y;
 }*/
 
-init_funcs =    [p13a_init];
-update_funcs =  [p13a_updt];
+const tracks = ["p13-a"];
+const init_funcs =    [p13a.init];
+const update_funcs =  [p13a.updt];
 
-player.on("pause", stellated_pause);
-player.on("play", stellated_play);
-player.on("playing", stellated_play);
-player.on("seeked", stellated_seeked);
-player.on("waiting", stellated_pause);
-player.on("timeupdate", stellated_time_update);
+const player = populate_tracks(tracks, false)[0];
 
-init();
+player.on("pause", stellated.pause);
+player.on("play", stellated.play);
+player.on("playing", stellated.play);
+player.on("seeked", stellated.seeked);
+player.on("waiting", stellated.pause);
+player.on("timeupdate", stellated.time_update);
 
-if (webgl_available()) {
+stellated.init(tracks, init_funcs);
+
+function animate() {
+    stellated.frame(update_funcs);
+    window.requestAnimationFrame(animate);
+}
+
+if (stellated.webgl_available()) {
     animate();
 }

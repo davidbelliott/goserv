@@ -1,12 +1,14 @@
+import * as THREE from '/static/js/three.js/build/three.module.js';
+
 const MAX_AMPL = 32767;
 const VIDEO_LATENCY = 0.07; // how much the video typically lags the audio
 const BIN_RES = 126;
 
 var scenes = null;
-const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
+var camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
 
 var canvas = null;
-var renderer = null;
+export var renderer = null;
 const clock = new THREE.Clock(false);
 
 var paused = true;
@@ -28,6 +30,8 @@ class LoadEnvelopeCallback {
         this.bigbit = bigbit;
     }
     handleEvent(oevent) {
+        console.log("receive envelope");
+        console.log(this.index);
         var arraybuffer = this.oreq.response;
         if (arraybuffer) {
             if (this.bigbit) {
@@ -39,10 +43,15 @@ class LoadEnvelopeCallback {
     }
 }
 
-function init() {
-    load_envelopes();
+export function set_cam(cam) {
+    camera = cam;
+}
+
+export function init(tracks, init_funcs) {
+    load_envelopes(tracks);
     var canvas_placeholder = document.getElementById("stellated-loading");
-    canvas = document.createElement('canvas', id='stellated');
+    canvas = document.createElement('canvas');
+    canvas.setAttribute('id', 'stellated');
     canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
     renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
     renderer.setClearColor("black");
@@ -57,16 +66,14 @@ function init() {
     }
 }
 
-function load_envelopes() {
+function load_envelopes(tracks) {
     envelopes = Array(tracks.length + 1).fill(null);
     for (var i = 0; i < tracks.length; i++) {
-        if (init_funcs[i] != null) {
-            var oreq = new XMLHttpRequest();
-            oreq.open("GET", "/static/wav/" + tracks[i] + ".bin");
-            oreq.responseType = "arraybuffer";
-            oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, i));
-            oreq.send();
-        }
+        var oreq = new XMLHttpRequest();
+        oreq.open("GET", "/static/wav/" + tracks[i] + ".bin");
+        oreq.responseType = "arraybuffer";
+        oreq.addEventListener("load", new LoadEnvelopeCallback(oreq, i));
+        oreq.send();
     }
     var oreq = new XMLHttpRequest();
     oreq.open("GET", "/static/wav/freq.bin");
@@ -114,7 +121,7 @@ function get_ampl(song_time, ch) {
     return scaled;
 }
 
-function webgl_available() {
+export function webgl_available() {
     try {
         var canvas = document.createElement( 'canvas' );
         return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
@@ -140,34 +147,34 @@ function resizeCanvasToDisplaySize() {
     }
 }
 
-function stellated_pause() {
+export function pause() {
     last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.stop();
     paused = true;
 }
 
-function stellated_play() {
+export function play() {
     last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.start();
     paused = false;
 }
 
-function stellated_time_update() {
+export function time_update() {
     if (!paused) {
         last_known_song_time = all_players[now_playing_idx].audio.currentTime;
         clock.start();
     }
 }
 
-function stellated_seeked() {
+export function seeked() {
     last_known_song_time = all_players[now_playing_idx].audio.currentTime;
     clock.start();
 }
 
-const animate = function () {
-    requestAnimationFrame( animate );
+export function frame(update_funcs, composer) {
+    let elapsed = clock.getElapsedTime();
     if (!paused) {
-        var song_time_raw = clock.getElapsedTime() + last_known_song_time;
+        var song_time_raw = elapsed + last_known_song_time;
         song_time = Math.min(Math.max(song_time_raw + VIDEO_LATENCY, 0.0), all_players[now_playing_idx].audio.duration);
     }
 
@@ -178,10 +185,9 @@ const animate = function () {
             ch_amps[i] = get_ampl(song_time, i);
         }
         update_funcs[now_playing_idx](paused, song_time, ch_amps);
-        renderer.render( scenes[now_playing_idx], camera );
         last_visualized_song_idx = now_playing_idx;
     } else {
         update_funcs[last_visualized_song_idx](true, 0.0, Array(num_chs[0]).fill(0));
-        renderer.render(scenes[last_visualized_song_idx], camera);
     }
-};
+    renderer.render(scenes[last_visualized_song_idx], camera);
+}
