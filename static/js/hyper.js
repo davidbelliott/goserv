@@ -112,6 +112,22 @@ const demo = {
     triguy_group: null,
 }
 
+const Channels = {
+    FOOT_0_Y: 0,
+    FOOT_0_Z: 1,
+    FOOT_1_Y: 2,
+    FOOT_1_Z: 3,
+    ARM_MODE: 5,
+    ARM_MOVEMENT: 4,
+    MAX: 6
+}
+
+const ArmMode = {
+    PUMP: 0,
+    CLAP: 1,
+    HOLD: 2
+}
+
 function init_demo(scene, camera) {
     const robot_spacing = 7;
 
@@ -134,7 +150,6 @@ function init_demo(scene, camera) {
 
     let loader = new GLTFLoader();
     loader.load( 'static/obj/triguy.glb', function ( gltf ) {
-        console.log(gltf.scene);
         const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1 } );
         for (var i in gltf.scene.children) {
             let edges = new THREE.EdgesGeometry(gltf.scene.children[i].geometry, 30);
@@ -150,7 +165,7 @@ function init_demo(scene, camera) {
     } );
 
     camera.position.set(0, 0, 8);
-    return 4;
+    return Channels.MAX;
 }
 
 function init_cube_projection(scene, camera) {
@@ -274,7 +289,6 @@ function update_demo(paused, song_time, ch_amps) {
     if (go_to_target) {
         const num_track_beats = 2;
         let elapsed = move_clock.getElapsedTime();
-        console.log(elapsed);
         for (var i = 0; i < 2; i++) {
             const full_time = 1.0 / beats_per_sec * num_track_beats;
             ang_vel = (target_rot[i] - start_rot[i]) * 1.0 / full_time;
@@ -296,10 +310,64 @@ function update_demo(paused, song_time, ch_amps) {
     if (!paused) {
         for (let i in demo.robots) {
             let ch_idx = 0;
-            let robot = demo.robots[i];
-            for (let foot = 0; foot < 2; foot++) {
-                robot.meshes[RobotParts.FEET[foot]].position.y = -2 + 0.75 * ch_amps[ch_idx++];
-                robot.meshes[RobotParts.FEET[foot]].position.z = -0.5 + ch_amps[ch_idx++];
+            const robot = demo.robots[i];
+            // Foot and leg movement
+            for (let side = 0; side < 2; side++) {
+                const foot_base_y = robot.cube_defs[RobotParts.FEET[side]].coords[1];
+                const foot_base_z = robot.cube_defs[RobotParts.FEET[side]].coords[2];
+                const leg_base_y = robot.cube_defs[RobotParts.LEGS[side]].coords[1];
+                const leg_base_z = robot.cube_defs[RobotParts.LEGS[side]].coords[2];
+                const leg_base_height = robot.cube_defs[RobotParts.LEGS[side]].dims[1];
+                const offset_y = 0.75 * ch_amps[ch_idx++];
+                const offset_z = ch_amps[ch_idx++] - 0.5;
+
+                const leg_scale_y = 1 - offset_y / leg_base_height;
+                const leg_offset_y = offset_y / 2;
+                robot.meshes[RobotParts.FEET[side]].position.y = foot_base_y + offset_y;
+                robot.meshes[RobotParts.FEET[side]].position.z = foot_base_z + offset_z;
+                robot.meshes[RobotParts.LEGS[side]].position.y = leg_base_y + leg_offset_y;
+                robot.meshes[RobotParts.LEGS[side]].position.z = leg_base_z + offset_z;
+                robot.meshes[RobotParts.LEGS[side]].scale.y = leg_scale_y;
+            }
+            // Arm movement
+            const arm_mode = ch_amps[ch_idx++];
+            const arm_move = ch_amps[ch_idx++];
+
+            let arm_rot = 0;
+            let arm_extension = 0;
+            let arm_closeness = 0;
+            switch (arm_mode) {
+                case ArmMode.PUMP:
+                    arm_rot = Math.PI / 4.0;
+                    arm_extension = arm_move - 0.25;
+                    arm_closeness = 0;
+                default:
+            }
+            console.log(arm_extension);
+            for (let side = 0; side < 2; side++) {
+                arm_rot = -arm_extension * Math.PI / 2.0;
+                const rot_axis = new THREE.Vector3(1, 0, 0);
+                //const translation = new THREE.Vector3(0, 0, arm_extension);
+                const translation = new THREE.Vector3(0, 0, 0);
+                const arm_base_coords = new THREE.Vector3(...robot.cube_defs[RobotParts.ARMS[side]].coords);
+                const pivot = new THREE.Vector3(arm_base_coords[0], arm_base_coords[1], 0);
+                const ARM = 0;
+                const HAND = 1;
+                for (let i = 0; i < 2; i++) {
+                    if (i == ARM) {
+                        var idx = RobotParts.ARMS[side];
+                    } else {
+                        var idx = RobotParts.HANDS[side];
+                    }
+                    const base_coords = new THREE.Vector3(...robot.cube_defs[idx].coords);
+                    let this_trans = base_coords.clone();
+                    this_trans.sub(pivot);
+                    this_trans.add(translation);
+                    this_trans.applyAxisAngle(rot_axis, arm_rot);
+                    this_trans.add(pivot);
+                    robot.meshes[idx].quaternion.setFromAxisAngle(rot_axis, arm_rot);
+                    robot.meshes[idx].position.copy(this_trans);
+                }
             }
         }
     }
