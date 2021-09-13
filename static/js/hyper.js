@@ -63,131 +63,75 @@ class LineDef {
     }
 }
 
+const RobotParts = {
+    TORSO: 0,
+    LEGS: [1, 2],
+    HEAD: 3,
+    HANDS: [4, 5],
+    FEET: [6, 7],
+    ARMS: [8, 9],
+    EYES: 10,
+    MAX: 11
+}
+
+class Robot {
+    constructor(parent_obj, position) {
+        let cube_defs = Array(RobotParts.MAX);
+        cube_defs[RobotParts.TORSO] = new BoxDef([0, 1, 0], [3, 2, 1]);
+        cube_defs[RobotParts.LEGS[0]] = new BoxDef([-0.75, -1, 0],
+            [0.5, 1.5, 1.0]);
+        cube_defs[RobotParts.LEGS[1]] = new BoxDef([0.75, -1, 0],
+            [0.5, 1.5, 1.0]);
+        cube_defs[RobotParts.HEAD] = new BoxDef([0, 2.75, 0], [2.0, 1.0, 2.0]);
+        cube_defs[RobotParts.HANDS[0]] = new BoxDef([-1.25, 1.5, 2.75], [0.5, 1, 1]);
+        cube_defs[RobotParts.HANDS[1]] = new BoxDef([1.25, 1.5, 2.75], [0.5, 1, 1]);
+        cube_defs[RobotParts.FEET[0]] = new BoxDef([-0.75, -2, 0], [1.5, 0.5, 2.0]);
+        cube_defs[RobotParts.FEET[1]] = new BoxDef([0.75, -2, 0], [1.5, 0.5, 2.0]);
+        cube_defs[RobotParts.ARMS[0]] = new BoxDef([-1.75, 1.5, 1.75], [0.5, 0.5, 2.0]);
+        cube_defs[RobotParts.ARMS[1]] = new BoxDef([1.75, 1.5, 1.75], [0.5, 0.5, 2.0]);
+        cube_defs[RobotParts.EYES] = new BoxDef([0, 2.75, 0.875], [1.5, 0.25, 0.25]);
+
+        this.cube_defs = cube_defs;
+        this.obj = new THREE.Group();
+        this.meshes = Array(RobotParts.MAX);
+
+        for (let i in cube_defs) {
+            let mesh = cube_defs[i].create();
+            this.obj.add(mesh);
+            this.meshes[i] = mesh;
+        }
+        this.obj.position.copy(position);
+        parent_obj.add(this.obj);
+    }
+}
+
 const demo = {
-    cubes: [new BoxDef([0, 1, 0], [3, 2, 1]),                   // torso
-            new BoxDef([-0.75, -1, 0], [0.5, 1.5, 1.0]),        // legs
-            new BoxDef([0.75, -1, 0], [0.5, 1.5, 1.0]),
-            new BoxDef([0, 2.75, 0], [2.0, 1.0, 2.0]),          // head
-            new BoxDef([-1.25, 1.5, 2.75], [0.5, 1, 1]),             // hands
-            new BoxDef([1.25, 1.5, 2.75], [0.5, 1, 1]),
-            new BoxDef([-0.75, -2, 0], [1.5, 0.5, 2.0]),     // feet
-            new BoxDef([0.75, -2, 0], [1.5, 0.5, 2.0]),
-            new BoxDef([-1.75, 1.5, 1.75], [0.5, 0.5, 2.0]),         // arms
-            new BoxDef([1.75, 1.5, 1.75], [0.5, 0.5, 2.0]),
-            new BoxDef([0, 2.75, 0.875], [1.5, 0.25, 0.25]),    // eyes
-    ],
-    lines: [//new LineDef([[-0.75, 3.25, 1], [0.75, 2.50, 1]]),
-            //new LineDef([[-0.75, 2.50, 1], [0.75, 3.25, 1]]),
-            /*new LineDef([[-0.70, 3.50, 1], [-0.20, 3.00, 1]]),
-            new LineDef([[-0.70, 3.00, 1], [-0.20, 3.50, 1]]),
-            new LineDef([[0.70, 3.50, 1], [0.20, 3.00, 1]]),
-            new LineDef([[0.70, 3.00, 1], [0.20, 3.50, 1]]),*/
-    ],
-    cubes_group: null,
+    robots: [],
     all_group: null,
-    feet: [null, null],
+    robot_group: null,
     triguy_group: null,
 }
 
-
 function init_demo(scene, camera) {
-    demo.cubes_group = new THREE.Group();
+    const robot_spacing = 7;
+
     demo.all_group = new THREE.Group();
-    for (const i in demo.cubes) {
-        let mesh = demo.cubes[i].create();
-        demo.cubes_group.add(mesh);
-        if (i == 6 || i == 7) {
-            demo.feet[i-6] = mesh;
-        }
-    }
-    for (const i in demo.lines) {
-        let line = demo.lines[i].create();
-        demo.cubes_group.add(line);
-    }
-    const curve = new THREE.EllipseCurve(
-        0, 0,
-        0.75, 0.5,
-        0, Math.PI,
-        true,
-        0
-    );
-    const points = curve.getPoints( 8 );
-    const geometry = new THREE.BufferGeometry().setFromPoints( points );
+    demo.robot_group = new THREE.Group();
+    demo.triguy_group = new THREE.Group();
 
-    const material = new THREE.LineBasicMaterial( { color : "yellow" } );
-
-    // Create the final object to add to the scene
-    const ellipse = new THREE.Line( geometry, material );
-    ellipse.position.set(0, 3.0, 1);
-    //demo.cubes_group.add(ellipse);
-
-
-    /*let geometry = new THREE.ConeGeometry(0.5, 0.25, 4, 1, false, Math.PI / 8);
-    let wireframe = new THREE.EdgesGeometry(geometry);
-    const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1 } );
-    let mesh = new THREE.LineSegments(wireframe, wireframe_mat);
-    mesh.rotation.set(-Math.PI / 2, 0, 0);
-    mesh.position.set(0, 2.825, 0.125);
-    mesh.scale.set(2, 1, 1);
-    demo.cubes_group.add(mesh);*/
-
-    /*for (const i in demo.snare_pyramids_base_x) {
-        let geometry = new THREE.ConeGeometry(1, 0.5, 4);
-        let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
-        let mesh = new THREE.LineSegments(wireframe, wireframe_mat);
-        mesh.position.set(demo.snare_pyramids_base_x[i] + 2 * i - 1, 0, 0);
-        mesh.rotation.set(0, 0, Math.PI / 2 * (i * -2 + 1));
-        demo.snare_pyramids.push(mesh);
-        demo.cubes_group.add(mesh);
-    }
-    {
-        let dim = demo.kick_cubes_base_y[1] - demo.kick_cubes_base_y[0] - 1;
-        let geometry = new THREE.BoxGeometry(2, dim, 2);
-        let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
-        demo.kick_rect_prism = new THREE.LineSegments(wireframe, wireframe_mat);
-        demo.cubes_group.add(demo.kick_rect_prism);
-    }
-    {
-        let dim = demo.kick_cubes_base_y[1] - demo.kick_cubes_base_y[0] - 1;
-        let geometry = new THREE.BoxGeometry(dim, 2, 2);
-        let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
-        big_snare_cube = new THREE.LineSegments(wireframe, wireframe_mat);
-        demo.cubes_group.add(big_snare_cube);
-    }
-    {
-        let geometry = new THREE.BoxGeometry(2, 2, 2);
-        let wireframe = new THREE.EdgesGeometry(geometry);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1, depthFunc: THREE.LessEqualDepth} );
-        center_cube = new THREE.LineSegments(wireframe, wireframe_mat);
-        demo.cubes_group.add(center_cube);
-    }
-    {
-        let geometry = new THREE.IcosahedronGeometry();
-        const basic_mat = new THREE.MeshBasicMaterial( { color: "red", depthFunc: THREE.LessEqualDepth } );
-        let wireframe = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.5));
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1, depthFunc: THREE.LessEqualDepth } );
-        demo.icos = new THREE.Mesh(geometry, basic_mat);
-        demo.icos.add(new THREE.LineSegments(wireframe, wireframe_mat));
-    }
-    scene.add(demo.icos);*/
-    demo.all_group.add(demo.cubes_group);
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
             if (i == 1 && j == 1) {
                 continue;
             }
-            let clone = demo.cubes_group.clone();
-            const spacing = 7;
-            clone.position.set((i - 1) * spacing, 0, (j - 1) * spacing);
-            demo.all_group.add(clone);
+            let position = new THREE.Vector3((i - 1) * robot_spacing, 0,
+                (j - 1) * robot_spacing);
+            demo.robots.push(new Robot(demo.robot_group, position));
         }
     }
+    demo.all_group.add(demo.robot_group);
     scene.add(demo.all_group);
 
-    demo.triguy_group = new THREE.Group();
     let loader = new GLTFLoader();
     loader.load( 'static/obj/triguy.glb', function ( gltf ) {
         console.log(gltf.scene);
@@ -200,7 +144,6 @@ function init_demo(scene, camera) {
             demo.triguy_group.scale.set(2.0, 2.0, 2.0);
             demo.triguy_group.rotation.set(Math.PI / 2.0, 0, 0);
         }
-        //const lseg = new THREE.LineSegments(gltf.scene, wireframe_mat);
 	demo.all_group.add(demo.triguy_group);
     }, undefined, function ( error ) {
             console.error( error );
@@ -304,8 +247,15 @@ function update_demo(paused, song_time, ch_amps) {
     const beats_per_sec = bpm / 60.0;
     const song_beat = Math.floor(song_time * beats_per_sec);
 
-    if (song_beat != song_beat_prev) {// && rand_int(2) == 0) {
-        if (song_beat % 2 == 0) {
+    if (song_beat != song_beat_prev && song_beat % 2 == 0) {// && rand_int(2) == 0) {
+        if (go_to_target) {
+            const manhattan_dist = Math.abs(target_rot[0] - rot[0]) +
+                Math.abs(target_rot[1] - rot[1], );
+            if (manhattan_dist <= 8) {
+                go_to_target = false;
+            }
+        }
+        if (!go_to_target) {
             for (var i = 0; i < 2; i++) {
                 start_rot[i] = Math.round(rot[i] / snap_mult) * snap_mult;
             }
@@ -326,7 +276,8 @@ function update_demo(paused, song_time, ch_amps) {
         let elapsed = move_clock.getElapsedTime();
         console.log(elapsed);
         for (var i = 0; i < 2; i++) {
-            ang_vel = (target_rot[i] - start_rot[i]) * beats_per_sec / num_track_beats;
+            const full_time = 1.0 / beats_per_sec * num_track_beats;
+            ang_vel = (target_rot[i] - start_rot[i]) * 1.0 / full_time;
             const sign_before = Math.sign(target_rot[i] - rot[i]);
             rot[i] = start_rot[i] + ang_vel * elapsed;
             const sign_after = Math.sign(target_rot[i] - rot[i]);
@@ -343,13 +294,14 @@ function update_demo(paused, song_time, ch_amps) {
     }
 
     if (!paused) {
-        //for (let i = 0; i < 1; i++) {
-            //console.log(ch_amps[2 * i]);
-            demo.feet[0].position.y = -2 + 0.75 * ch_amps[0];
-            demo.feet[0].position.z = -0.5 + ch_amps[1];
-            demo.feet[1].position.y = -2 + 0.75 * ch_amps[2];
-            demo.feet[1].position.z = -0.5 + ch_amps[3];
-        //}
+        for (let i in demo.robots) {
+            let ch_idx = 0;
+            let robot = demo.robots[i];
+            for (let foot = 0; foot < 2; foot++) {
+                robot.meshes[RobotParts.FEET[foot]].position.y = -2 + 0.75 * ch_amps[ch_idx++];
+                robot.meshes[RobotParts.FEET[foot]].position.z = -0.5 + ch_amps[ch_idx++];
+            }
+        }
     }
     //demo.cubes_group.rotation.y = Math.pow((1 - Math.sin((song_time / 60.0 * 110 * 2) * Math.PI)) / 2, 2) * Math.PI / 32;
     demo.all_group.rotation.x = rot[0] * Math.PI / div;
