@@ -113,11 +113,12 @@ function get_ampl(song_time, ch) {
     }
     let ch_offset = Math.floor(envelope.length * ch / num_chs[now_playing_idx]);
     let val = envelope[ch_offset + Math.floor(song_time * BIN_RES)];
-    if (val == 0) {
+    return val / MAX_AMPL;
+    /*if (val == 0) {
         return val;
-    }
-    let scaled = 0.5 * Math.log(val) / Math.log(MAX_AMPL) +
-                    0.5 * val / MAX_AMPL;
+    }*/
+    //let scaled = 0.5 * Math.log(val) / Math.log(MAX_AMPL) +
+                    //0.5 * val / MAX_AMPL;
     return scaled;
 }
 
@@ -164,6 +165,7 @@ export function time_update() {
         last_known_song_time = all_players[now_playing_idx].audio.currentTime;
         clock.start();
     }
+    console.log("time update")
 }
 
 export function seeked() {

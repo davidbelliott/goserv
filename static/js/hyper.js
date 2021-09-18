@@ -4,7 +4,7 @@ import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.
 
 var cur_scene_idx = 0;
 //const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
-stellated.set_cam(new THREE.OrthographicCamera( 7, -7, 7, -7, -7, 1000));
+stellated.set_cam(new THREE.OrthographicCamera( 8, -8, 8, -8, -8, 1000));
 
 //var canvas = null;
 //var renderer = null;
@@ -91,6 +91,13 @@ class Robot {
         cube_defs[RobotParts.ARMS[1]] = new BoxDef([1.75, 1.5, 1.75], [0.5, 0.5, 2.0]);
         cube_defs[RobotParts.EYES] = new BoxDef([0, 2.75, 0.875], [1.5, 0.25, 0.25]);
 
+        let offset = [0, -1, 0];
+        for (let i in cube_defs) {
+            for (let j in offset) {
+                cube_defs[i].coords[j] += offset[j];
+            }
+        }
+
         this.cube_defs = cube_defs;
         this.obj = new THREE.Group();
         this.meshes = Array(RobotParts.MAX);
@@ -109,7 +116,7 @@ const demo = {
     robots: [],
     all_group: null,
     robot_group: null,
-    triguy_group: null,
+    anaman_group: null,
 }
 
 const Channels = {
@@ -128,20 +135,17 @@ const ArmMode = {
     HOLD: 2
 }
 
-function init_demo(scene, camera) {
-    const robot_spacing = 7;
+let curr_spacing = 0;
 
+function init_demo(scene, camera) {
     demo.all_group = new THREE.Group();
     demo.robot_group = new THREE.Group();
-    demo.triguy_group = new THREE.Group();
+    demo.anaman_group = new THREE.Group();
 
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
-            if (i == 1 && j == 1) {
-                continue;
-            }
-            let position = new THREE.Vector3((i - 1) * robot_spacing, 0,
-                (j - 1) * robot_spacing);
+            let position = new THREE.Vector3((i - 1) * curr_spacing, 0,
+                (j - 1) * curr_spacing);
             demo.robots.push(new Robot(demo.robot_group, position));
         }
     }
@@ -149,17 +153,17 @@ function init_demo(scene, camera) {
     scene.add(demo.all_group);
 
     let loader = new GLTFLoader();
-    loader.load( 'static/obj/triguy.glb', function ( gltf ) {
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1 } );
+    loader.load( 'static/obj/anaman.glb', function ( gltf ) {
+        const wireframe_mat = new THREE.LineBasicMaterial( { color: "cyan", linewidth: 1 } );
         for (var i in gltf.scene.children) {
             let edges = new THREE.EdgesGeometry(gltf.scene.children[i].geometry, 30);
             let mesh = new THREE.LineSegments(edges, wireframe_mat);
-            demo.triguy_group.add(mesh);
-            demo.triguy_group.position.set(0, 4, 0);
-            demo.triguy_group.scale.set(2.0, 2.0, 2.0);
-            demo.triguy_group.rotation.set(Math.PI / 2.0, 0, 0);
+            demo.anaman_group.add(mesh);
+            demo.anaman_group.position.set(0, 2.15, 0);
+            demo.anaman_group.scale.set(2.0, 2.0, 2.0);
+            demo.anaman_group.rotation.set(Math.PI / 2.0, 0, 0);
         }
-	demo.all_group.add(demo.triguy_group);
+	demo.all_group.add(demo.anaman_group);
     }, undefined, function ( error ) {
             console.error( error );
     } );
@@ -307,6 +311,47 @@ function update_demo(paused, song_time, ch_amps) {
         }
     }
 
+    let coeff = 0.10;
+
+    let target_spacing = 0;
+    if (song_beat >= 4 * 20 && song_beat < 4 * 52) {
+        target_spacing = 7;
+    } else if (song_beat >= 4 * 52 && song_beat < 4 * 84) {
+        coeff = 0.011;
+        target_spacing = 0;
+    } else if (song_beat >= 4 * 84 && song_beat < 4 * 116) {
+        target_spacing = 7;
+    } else if (song_beat >= 4 * 116 && song_beat < 4 * 148) {
+        coeff = 0.0025;
+        target_spacing = 0;
+    } else if (song_beat >= 4 * 148) {
+        target_spacing = 7;
+    }
+    if (target_spacing > curr_spacing) {
+        if (Math.abs(target_spacing - curr_spacing) > coeff) {
+            curr_spacing += coeff;
+        } else {
+            curr_spacing = target_spacing;
+        }
+    } else if (target_spacing < curr_spacing) {
+        if (Math.abs(target_spacing - curr_spacing) > coeff) {
+            curr_spacing -= coeff;
+        } else {
+            curr_spacing = target_spacing;
+        }
+    }
+
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            let position = new THREE.Vector3((i - 1) * curr_spacing, 0,
+                (j - 1) * curr_spacing);
+            demo.robots[i * 3 + j].obj.position.copy(position);
+        }
+    }
+
+    demo.robots[4].obj.visible = (song_beat < 4 * 84);
+    demo.anaman_group.visible = !demo.robots[4].obj.visible;
+
     if (!paused) {
         for (let i in demo.robots) {
             let ch_idx = 0;
@@ -318,7 +363,7 @@ function update_demo(paused, song_time, ch_amps) {
                 const leg_base_y = robot.cube_defs[RobotParts.LEGS[side]].coords[1];
                 const leg_base_z = robot.cube_defs[RobotParts.LEGS[side]].coords[2];
                 const leg_base_height = robot.cube_defs[RobotParts.LEGS[side]].dims[1];
-                const offset_y = 0.75 * ch_amps[ch_idx++];
+                const offset_y = 0.80 * ch_amps[ch_idx++];
                 const offset_z = ch_amps[ch_idx++] - 0.5;
 
                 const leg_scale_y = 1 - offset_y / leg_base_height;
@@ -336,21 +381,23 @@ function update_demo(paused, song_time, ch_amps) {
             let arm_rot = 0;
             let arm_extension = 0;
             let arm_closeness = 0;
-            switch (arm_mode) {
-                case ArmMode.PUMP:
-                    arm_rot = Math.PI / 4.0;
-                    arm_extension = arm_move - 0.25;
-                    arm_closeness = 0;
-                default:
+            if (arm_mode < 0.5) {
+                arm_rot = -Math.PI / 2.0;
+                arm_extension = arm_move - 0.25;
+                arm_closeness = 1;
+            } else {
+                arm_rot = 0.0;
+                arm_extension = 0;
+                arm_closeness = arm_move;
             }
-            console.log(arm_extension);
             for (let side = 0; side < 2; side++) {
-                arm_rot = -arm_extension * Math.PI / 2.0;
+                //arm_rot = -arm_extension * Math.PI / 2.0;
                 const rot_axis = new THREE.Vector3(1, 0, 0);
-                //const translation = new THREE.Vector3(0, 0, arm_extension);
-                const translation = new THREE.Vector3(0, 0, 0);
+                const side_sign = side * 2 - 1
+                const translation = new THREE.Vector3(side_sign * (arm_closeness - 1),
+                    0, arm_extension);
                 const arm_base_coords = new THREE.Vector3(...robot.cube_defs[RobotParts.ARMS[side]].coords);
-                const pivot = new THREE.Vector3(arm_base_coords[0], arm_base_coords[1], 0);
+                const pivot = new THREE.Vector3(arm_base_coords.x, arm_base_coords.y, 0);
                 const ARM = 0;
                 const HAND = 1;
                 for (let i = 0; i < 2; i++) {
