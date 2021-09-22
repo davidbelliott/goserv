@@ -1,5 +1,6 @@
 import * as THREE from '/static/js/three.js/build/three.module.js';
 import * as stellated from '/static/js/stellated.js';
+import { Tesseract } from '/static/js/highdim.js';
 import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.js';
 
 var cur_scene_idx = 0;
@@ -117,6 +118,7 @@ const demo = {
     all_group: null,
     robot_group: null,
     anaman_group: null,
+    tesseract: null,
 }
 
 const Channels = {
@@ -141,6 +143,7 @@ function init_demo(scene, camera) {
     demo.all_group = new THREE.Group();
     demo.robot_group = new THREE.Group();
     demo.anaman_group = new THREE.Group();
+    demo.tesseract = new Tesseract(demo.all_group, 4);
 
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
@@ -159,7 +162,7 @@ function init_demo(scene, camera) {
             let edges = new THREE.EdgesGeometry(gltf.scene.children[i].geometry, 30);
             let mesh = new THREE.LineSegments(edges, wireframe_mat);
             demo.anaman_group.add(mesh);
-            demo.anaman_group.position.set(0, 2.15, 0);
+            demo.anaman_group.position.set(0, 2.15, -0.2);
             demo.anaman_group.scale.set(2.0, 2.0, 2.0);
             demo.anaman_group.rotation.set(Math.PI / 2.0, 0, 0);
         }
@@ -265,6 +268,9 @@ function update_demo(paused, song_time, ch_amps) {
 
     const beats_per_sec = bpm / 60.0;
     const song_beat = Math.floor(song_time * beats_per_sec);
+
+    demo.tesseract.rot_xw += 0.05;
+    demo.tesseract.update_geom();
 
     if (song_beat != song_beat_prev && song_beat % 2 == 0) {// && rand_int(2) == 0) {
         if (go_to_target) {
