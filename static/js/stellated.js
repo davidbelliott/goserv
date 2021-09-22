@@ -47,6 +47,10 @@ export function set_cam(cam) {
     camera = cam;
 }
 
+export function get_cam() {
+    return camera;
+}
+
 export function init(tracks, init_funcs) {
     load_envelopes(tracks);
     var canvas_placeholder = document.getElementById("stellated-loading");

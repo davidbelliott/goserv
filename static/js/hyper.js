@@ -4,8 +4,9 @@ import { Tesseract } from '/static/js/highdim.js';
 import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.js';
 
 var cur_scene_idx = 0;
-//const camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
-stellated.set_cam(new THREE.OrthographicCamera( 8, -8, 8, -8, -8, 1000));
+const cam_persp = new THREE.PerspectiveCamera( 75, 1, 0.1, 10000 );
+const cam_orth = new THREE.OrthographicCamera( 8, -8, 8, -8, -8, 1000);
+stellated.set_cam(cam_persp);
 
 //var canvas = null;
 //var renderer = null;
@@ -118,7 +119,7 @@ const demo = {
     all_group: null,
     robot_group: null,
     anaman_group: null,
-    tesseract: null,
+    tesseract_group: null,
 }
 
 const Channels = {
@@ -138,12 +139,18 @@ const ArmMode = {
 }
 
 let curr_spacing = 0;
+let curr_tesseract_scale = 0;
+let curr_arm_rot = 0;
 
 function init_demo(scene, camera) {
     demo.all_group = new THREE.Group();
     demo.robot_group = new THREE.Group();
     demo.anaman_group = new THREE.Group();
-    demo.tesseract = new Tesseract(demo.all_group, 4);
+    demo.tesseract_group = new THREE.Group();
+
+    demo.tesseract = new Tesseract(demo.tesseract_group, 4);
+    demo.tesseract_group.position.set(0, 0.5, 2.75);
+    demo.all_group.add(demo.tesseract_group);
 
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
@@ -171,7 +178,8 @@ function init_demo(scene, camera) {
             console.error( error );
     } );
 
-    camera.position.set(0, 0, 8);
+    cam_persp.position.set(0, 0, 8);
+    cam_orth.position.set(0, 0, 8);
     return Channels.MAX;
 }
 
@@ -254,6 +262,23 @@ function arr_eq(a, b) {
     return true;
 }
 
+function lerp(curr, target, coeff) {
+    if (target > curr) {
+        if (Math.abs(target - curr) > coeff) {
+            curr += coeff;
+        } else {
+            curr = target;
+        }
+    } else if (target < curr) {
+        if (Math.abs(target - curr) > coeff) {
+            curr -= coeff;
+        } else {
+            curr = target;
+        }
+    }
+    return curr;
+}
+
 var start_rot = [0, 0];
 var target_rot = [0, 0];
 var go_to_target = false;
@@ -269,7 +294,7 @@ function update_demo(paused, song_time, ch_amps) {
     const beats_per_sec = bpm / 60.0;
     const song_beat = Math.floor(song_time * beats_per_sec);
 
-    demo.tesseract.rot_xw += 0.05;
+    demo.tesseract.rot_xw -= 0.05;
     demo.tesseract.update_geom();
 
     if (song_beat != song_beat_prev && song_beat % 2 == 0) {// && rand_int(2) == 0) {
@@ -320,32 +345,58 @@ function update_demo(paused, song_time, ch_amps) {
     let coeff = 0.10;
 
     let target_spacing = 0;
+
+    let target_tesseract_scale = 0;
+    let target_tesseract_pos = new THREE.Vector3();
+
+    if (song_beat < 4 * 52 && stellated.get_cam() != cam_persp) {
+        stellated.set_cam(cam_persp);
+    } else if (song_beat >= 4 * 52 && stellated.get_cam() != cam_orth) {
+        stellated.set_cam(cam_orth);
+    }
+
+    if (song_beat >= 4 * 4 && song_beat < 4 * 20) {
+        target_tesseract_scale = 1;
+        target_tesseract_pos.set(0, 0.5, 2.75);
+    } else if (song_beat >= 4 * 20) {
+        target_tesseract_scale = 4
+        target_tesseract_pos.set(0, 0, 0);
+    }
+
+
     if (song_beat >= 4 * 20 && song_beat < 4 * 52) {
         target_spacing = 7;
+        target_tesseract_scale = 0;
+        target_tesseract_pos.set(0, 0, 0);
     } else if (song_beat >= 4 * 52 && song_beat < 4 * 84) {
         coeff = 0.011;
         target_spacing = 0;
+        target_tesseract_scale = 1;
+        target_tesseract_pos.set(0, 0.5, 2.75);
     } else if (song_beat >= 4 * 84 && song_beat < 4 * 116) {
         target_spacing = 7;
+        target_tesseract_scale = 4;
+        target_tesseract_pos.set(0, 0, 0);
     } else if (song_beat >= 4 * 116 && song_beat < 4 * 148) {
         coeff = 0.0025;
         target_spacing = 0;
+        target_tesseract_scale = 1;
+        target_tesseract_pos.set(0, 0.5, 2.75);
     } else if (song_beat >= 4 * 148) {
         target_spacing = 7;
+        target_tesseract_scale = 4;
+        target_tesseract_pos.set(0, 0, 0);
     }
-    if (target_spacing > curr_spacing) {
-        if (Math.abs(target_spacing - curr_spacing) > coeff) {
-            curr_spacing += coeff;
-        } else {
-            curr_spacing = target_spacing;
-        }
-    } else if (target_spacing < curr_spacing) {
-        if (Math.abs(target_spacing - curr_spacing) > coeff) {
-            curr_spacing -= coeff;
-        } else {
-            curr_spacing = target_spacing;
-        }
+
+    curr_spacing = lerp(curr_spacing, target_spacing, coeff);
+    curr_tesseract_scale = lerp(curr_tesseract_scale, target_tesseract_scale, 0.05);
+    demo.tesseract_group.scale.set(curr_tesseract_scale, curr_tesseract_scale, curr_tesseract_scale);
+    let tess_pos = demo.tesseract_group.position.toArray();
+    let target_tess_pos = target_tesseract_pos.toArray();
+    for (let i in tess_pos) {
+        tess_pos[i] = lerp(tess_pos[i], target_tess_pos[i], 0.05);
     }
+    demo.tesseract_group.position.fromArray(tess_pos);
 
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
@@ -384,18 +435,19 @@ function update_demo(paused, song_time, ch_amps) {
             const arm_mode = ch_amps[ch_idx++];
             const arm_move = ch_amps[ch_idx++];
 
-            let arm_rot = 0;
+            let target_arm_rot = 0;
             let arm_extension = 0;
             let arm_closeness = 0;
             if (arm_mode < 0.5) {
-                arm_rot = -Math.PI / 2.0;
+                target_arm_rot = -Math.PI / 2.0;
                 arm_extension = arm_move - 0.25;
                 arm_closeness = 1;
             } else {
-                arm_rot = 0.0;
+                target_arm_rot = 0.0;
                 arm_extension = 0;
                 arm_closeness = arm_move;
             }
+            curr_arm_rot = lerp(curr_arm_rot, target_arm_rot, 0.005);
             for (let side = 0; side < 2; side++) {
                 //arm_rot = -arm_extension * Math.PI / 2.0;
                 const rot_axis = new THREE.Vector3(1, 0, 0);
@@ -416,9 +468,9 @@ function update_demo(paused, song_time, ch_amps) {
                     let this_trans = base_coords.clone();
                     this_trans.sub(pivot);
                     this_trans.add(translation);
-                    this_trans.applyAxisAngle(rot_axis, arm_rot);
+                    this_trans.applyAxisAngle(rot_axis, curr_arm_rot);
                     this_trans.add(pivot);
-                    robot.meshes[idx].quaternion.setFromAxisAngle(rot_axis, arm_rot);
+                    robot.meshes[idx].quaternion.setFromAxisAngle(rot_axis, curr_arm_rot);
                     robot.meshes[idx].position.copy(this_trans);
                 }
             }

@@ -1,11 +1,7 @@
 import * as THREE from '/static/js/three.js/build/three.module.js';
 
 export class Tesseract {
-    constructor(parent_obj, size, pos=null) {
-        if (pos == null) {
-            pos = new THREE.Vector4();
-        }
-        this.pos = pos;
+    constructor(parent_obj, size) {
         this.rot_xw = 0.0;
         this.vertices = [];
         this.edges = [];
@@ -33,7 +29,8 @@ export class Tesseract {
         const points = [];
         for (let i in this.edges) {
             for (let j in this.edges[i]) {
-                points.push(project_3d(this.vertices[this.edges[i][j]]));
+                const point = this.vertices[this.edges[i][j]];
+                points.push(project_3d(point));
             }
         }
         const wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1 } );
@@ -58,6 +55,12 @@ export class Tesseract {
         //this.geom.setAttribute('position', new THREE.BufferAttribute(points_arr_typed, 3));
         this.geom.attributes.position.needsUpdate = true;
     }
+}
+
+function apply_translation(vec4, trans) {
+    const v = vec4.clone();
+    v.add(trans);
+    return v;
 }
 
 function apply_rotation(vec4, plane, angle) {
