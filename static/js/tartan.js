@@ -1,5 +1,3 @@
-import * as THREE from '/static/js/three.js/build/three.module.js';
-
 export const MAX_ATTR_BITWIDTH = 8;
 export const NUM_BYTES = 32;
 
@@ -45,7 +43,6 @@ class Attribute {
         if (value == null) {
             throw('Failed to instantiate value for attribute');
         }
-        console.log("instantiating: " + value);
         this.instantiated_value = value;
     }
 
@@ -78,7 +75,11 @@ function get_bits(byte_array, start_bit_idx, n_bits) {
     return result;
 }
 
-function to_bin_str(byte_array) {
+export function get_color_hex_str(num) {
+    return `#${num.toString(16).padStart(6, '0')}`;
+}
+
+function byte_arr_to_bin_str(byte_array) {
     let str = "";
     for (let i in byte_array) {
         str += byte_array[i].toString(2).padStart(8, '0') + ' ';
@@ -96,40 +97,50 @@ function inst_attrs_from_bytes(attrs, byte_array) {
     return cur_bit_idx;
 }
 
-function print_attrs(attrs) {
-    console.log(attrs);
+export function print_attrs(tartan, p) {
+    const attrs = tartan.attributes;
+    let tbl = document.createElement('table');
+    for (let [attr_name, attr] of attrs) {
+        let tr = tbl.insertRow();
+        let td_name = tr.insertCell();
+        td_name.appendChild(document.createTextNode(attr_name));
+        let td_value = tr.insertCell();
+        td_value.appendChild(document.createTextNode(attr.get_val()));
+        let td_rarity = tr.insertCell();
+        td_rarity.appendChild(document.createTextNode(attr.get_rarity()));
+    }
+    p.appendChild(tbl);
 }
 
-const COLORS = new Map();
-COLORS.set("black",     0x000000);
+export const COLORS = new Map();
+COLORS.set("brown",     0x333333);
 COLORS.set("red",       0xFF0000);
 COLORS.set("green",     0x00FF00);
 COLORS.set("blue",      0x0000FF);
 COLORS.set("yellow",    0xFFFF00);
-COLORS.set("magenta",   0xFF00FF);
+COLORS.set("magenta",   0x330033);
 COLORS.set("cyan",      0x00FFFF);
 COLORS.set("white",     0xFFFFFF);
-COLORS.set("lavendar",  0xE6E6FA);
 
 export class Tartan {
     attributes;
-    parent_obj;
+    ctx;
     group;
     geom;
-    constructor(parent_obj, seed_bytes) {
+    constructor(ctx, seed_bytes) {
         this.attributes = new Map();
 
         const possible_n_colors = new Map();
-        possible_n_colors.set(2, 2);
+        possible_n_colors.set(2, 1);
         possible_n_colors.set(3, 2);
         possible_n_colors.set(4, 2);
-        possible_n_colors.set(5, 1);
+        possible_n_colors.set(5, 2);
         possible_n_colors.set(6, 1);
         this.attributes.set('n_colors', new Attribute(possible_n_colors, 3));
 
-        const max_num_colors = 6;
+        const max_num_colors = Math.max(...possible_n_colors.keys());
         const possible_colors = new Map();
-        possible_colors.set("black", 1);
+        possible_colors.set("brown", 1);
         possible_colors.set("red", 1);
         possible_colors.set("green", 1);
         possible_colors.set("blue", 1);
@@ -142,8 +153,10 @@ export class Tartan {
         }
 
         const possible_setts = new Map();
-        possible_setts.set("fbfb", 1);
-        this.attributes.set("sett", new Attribute(possible_setts, 0));
+        possible_setts.set("f", 1);
+        possible_setts.set("fb", 2);
+        possible_setts.set("fbf", 1);
+        this.attributes.set("sett", new Attribute(possible_setts, 2));
 
         // extra stripes, added to # of colors (so every color can be used)
         const max_n_stripes = 10;
@@ -159,76 +172,76 @@ export class Tartan {
         this.attributes.set("n_stripes", new Attribute(possible_n_stripes, 4));
 
         // thread counts taken directly from binary sequence -> binomial dist
-        const possible_median_thread_counts = new Map();
-        possible_median_thread_counts.set(2, 1);
-        possible_median_thread_counts.set(4, 2);
-        possible_median_thread_counts.set(8, 2);
-        possible_median_thread_counts.set(12, 2);
-        possible_median_thread_counts.set(16, 1);
-        this.attributes.set("median_thread_count", new Attribute(possible_median_thread_counts, 3));
+        const possible_base_thread_counts = new Map();
+        possible_base_thread_counts.set(1, 2);
+        possible_base_thread_counts.set(2, 2);
+        possible_base_thread_counts.set(4, 2);
+        possible_base_thread_counts.set(6, 1);
+        possible_base_thread_counts.set(8, 1);
+        this.attributes.set("base_thread_count", new Attribute(possible_base_thread_counts, 3));
 
         let bit_idx = inst_attrs_from_bytes(this.attributes, seed_bytes);
 
         const n_colors = this.get_attr_val("n_colors");
+        for (let i = n_colors; i < max_num_colors; i++) {
+            this.attributes.delete(`color_${i}`);
+        }
+
         const n_extra_stripes = this.get_attr_val("n_stripes");
-        console.log("n colors:");
-        console.log(n_colors);
         this.stripes = [];
         for (let i = 0; i < n_colors + n_extra_stripes; i++) {
             const threads_bits = get_bits(seed_bytes, bit_idx, 3);
             bit_idx += 3;
-            let threads = threads_bits *
-                this.get_attr_val("median_thread_count") /
-                (Math.pow(2, 3) - 1) * 2;
+            let threads = (threads_bits + 1) * this.get_attr_val("base_thread_count");
             this.stripes.push([i % n_colors, threads]);
         }
+        console.log(this.stripes);
 
-        print_attrs(this.attributes);
-        console.log(`Bits used: ${bit_idx}`);
-
-        this.parent_obj = parent_obj;
-        this.group = new THREE.Group();
-
+        this.ctx = ctx;
         let cur_x = 0;
-        this.unit = new THREE.Group();
-        for (let i in this.stripes) {
-            console.log("stripe");
-            console.log(this.stripes[i]);
-            const w = this.stripes[i][1] / 100;
-            const geom = new THREE.PlaneGeometry(w, 1);
-            const col_idx = this.stripes[i][0];
-            const col_name = this.get_attr_val(`color_${col_idx}`);
-            const col_val = COLORS.get(col_name);
-            console.log(col_name);
-            const mat = new THREE.MeshBasicMaterial({color: col_val, side: THREE.DoubleSide});
-            const plane = new THREE.Mesh(geom, mat);
-            plane.position.set(cur_x + w / 2, 0, 0);
-            cur_x += w;
-            this.unit.add(plane);
+        const secondary_canvas = document.createElement("canvas");
+        secondary_canvas.width = 640;
+        secondary_canvas.height = 640;
+        this.ctx_secondary = secondary_canvas.getContext("2d");
+        while (cur_x < 320) {
+            for (let i in this.stripes) {
+                const w = this.stripes[i][1];
+                const col_idx = this.stripes[i][0];
+                const col_name = this.get_attr_val(`color_${col_idx}`);
+                const col_val = COLORS.get(col_name);
+                const fill = get_color_hex_str(col_val);
+                this.ctx_secondary.fillStyle = fill;
+                this.ctx_secondary.fillRect(cur_x + 160, 160, w, 320);
+                cur_x += w;
+            }
         }
-        let w = cur_x;
-        cur_x = -1.0;
-        while (cur_x < 1.0) {
-            let clone = this.unit.clone();
-            clone.position.set(cur_x + w / 2, 0, 0);
-            this.group.add(clone);
-            cur_x += w;
+        this.ctx.rotate(Math.PI / 2);
+        this.ctx.translate(0, -320);
+        ctx.drawImage(secondary_canvas, -160, -160);
+        this.ctx.translate(0, 320);
+        this.ctx.rotate(-Math.PI / 2);
+
+        this.ctx_secondary.translate(320, 0);
+        this.ctx_secondary.rotate(Math.PI / 4);
+        for (let i = 0; i < 160; i++) {
+            this.ctx_secondary.fillStyle = "#000000";
+            //this.ctx_secondary.fillRect(i * 4, 0, 2, 640);
+            this.ctx_secondary.clearRect(i * 4, 0, 2, 640);
         }
+        this.ctx_secondary.rotate(-Math.PI / 4);
+        //this.ctx_secondary.translate(-160, -160);
+        this.ctx.drawImage(secondary_canvas, -160, -160);
 
 
         /*this.geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         const wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1 } );
         const line = new THREE.LineSegments(this.geom, wireframe_mat);
         this.group.add(line);*/
-        parent_obj.add(this.group);
+        //parent_obj.add(this.group);
     }
     get_attr_val(name) {
-        console.log(this.attributes.get(name));
         return this.attributes.get(name).get_val();
     }
     destroy() {
-        if (this.parent_obj != null) {
-            this.parent_obj.remove(this.group);
-        }
     }
 }

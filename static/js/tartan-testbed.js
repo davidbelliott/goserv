@@ -1,62 +1,37 @@
-import * as THREE from '/static/js/three.js/build/three.module.js';
-import { Tartan, NUM_BYTES } from '/static/js/tartan.js';
+//import * as THREE from '/static/js/three.js/build/three.module.js';
+import * as tartan from '/static/js/tartan.js';
 
 let crypto_obj = window.crypto || window.msCrypto;
-let tx_bytes = new Uint8Array(NUM_BYTES);
+let tx_bytes = new Uint8Array(tartan.NUM_BYTES);
 
-const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1000);
-let renderer = null;
-let tartan = null;
+let t = null;
+let canvas = document.getElementById("tartan");
+let ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
 
-function init() {
+function gen_tartan() {
     tx_bytes = crypto_obj.getRandomValues(tx_bytes);
-    if (tartan != null) {
-        tartan.destroy();
+    if (t != null) {
+        t.destroy();
     }
-    tartan = new Tartan(scene, tx_bytes);
-    var canvas_placeholder = document.getElementById("tartan-loading");
-    var canvas = document.createElement('canvas');
-    canvas.setAttribute('id', 'tartan');
-    canvas_placeholder.parentNode.replaceChild(canvas, canvas_placeholder);
-    renderer = new THREE.WebGLRenderer({ "canvas": canvas, "antialias": false });
-    renderer.setClearColor("black");
-    renderer.setPixelRatio( window.devicePixelRatio );
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 320, 320);
+    t = new tartan.Tartan(ctx, tx_bytes);
+
+    let attrs = document.getElementById("attrs");
+    attrs.innerHTML = '';
+    tartan.print_attrs(t, attrs);
 }
 
-function webgl_available() {
-    try {
-        var canvas = document.createElement( 'canvas' );
-        return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
-    } catch ( e ) {
-        return false;
-    }
+document.getElementById("gen-tartan-button").onclick = gen_tartan;
+
+let colors = document.getElementById("colors");
+for (let [col_name, col_val] of tartan.COLORS) {
+    let cdiv = document.createElement("div");
+    cdiv.style = `background-color: ${tartan.get_color_hex_str(col_val)}; display: inline-block; width: 20px; height: 1rem`;
+    let t = document.createTextNode(col_name);
+    colors.appendChild(t);
+    colors.appendChild(cdiv);
 }
 
-function resize_canvas_to_display() {
-    const canvas = renderer.domElement;
-    // look up the size the canvas is being displayed
-    const width = canvas.clientWidth;
-    const height = width;//canvas.clientHeight;
-
-    // adjust displayBuffer size to match
-    if (canvas.width !== width || canvas.height !== height) {
-        // you must pass false here or three.js sadly fights the browser
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-
-        // update any render target sizes here
-    }
-}
-
-function animate() {
-    resize_canvas_to_display();
-    renderer.render(scene, camera);
-    window.requestAnimationFrame(animate);
-}
-
-if (webgl_available()) {
-    init();
-    animate();
-}
+gen_tartan();
