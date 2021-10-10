@@ -46,9 +46,22 @@ class Attribute {
         this.instantiated_value = value;
     }
 
-    get_rarity() {      // gets the rarity score, one minus norm prob
-        return 1.0 - this.possible_values[this.instantiated_value] / 
+    get_prob() {      // gets the probability of this attribute having its val
+        return this.possible_values.get(this.instantiated_value) /
             Math.pow(2, this.bit_width);
+    }
+
+    get_max_rarity() {
+        const all_rel_probs = Array.from(this.possible_values.values());
+        all_rel_probs.sort(function(a, b){ return a - b });     // sort descending
+        return (all_rel_probs.findIndex(p => p == all_rel_probs[all_rel_probs.length - 1])) / this.possible_values.size;
+    }
+
+    get_rarity() {
+        const this_rel_prob = this.possible_values.get(this.instantiated_value);
+        const all_rel_probs = Array.from(this.possible_values.values());
+        all_rel_probs.sort(function(a, b){ return b - a });     // sort descending
+        return (all_rel_probs.findIndex(p => p == this_rel_prob)) / this.possible_values.size;
     }
 }
 
@@ -100,6 +113,12 @@ function inst_attrs_from_bytes(attrs, byte_array) {
 export function print_attrs(tartan, p) {
     const attrs = tartan.attributes;
     let tbl = document.createElement('table');
+    let head = tbl.createTHead();
+    const header = ["attr", "value", "rarity"];
+    for(let i = 0; i < header.length; i++){
+        head.appendChild(document.createElement("th")).
+            appendChild(document.createTextNode(header[i]));
+    }
     for (let [attr_name, attr] of attrs) {
         let tr = tbl.insertRow();
         let td_name = tr.insertCell();
@@ -135,21 +154,21 @@ export class Tartan {
         possible_n_colors.set(3, 2);
         possible_n_colors.set(4, 2);
         possible_n_colors.set(5, 2);
-        possible_n_colors.set(6, 1);
-        this.attributes.set('n_colors', new Attribute(possible_n_colors, 3));
+        possible_n_colors.set(6, 1)
+        this.attributes.set("n_colors", new Attribute(possible_n_colors, 3));
 
         const max_num_colors = Math.max(...possible_n_colors.keys());
         const possible_colors = new Map();
-        possible_colors.set("brown", 1);
-        possible_colors.set("red", 1);
+        possible_colors.set("brown", 3);
+        possible_colors.set("red", 3);
         possible_colors.set("green", 1);
-        possible_colors.set("blue", 1);
-        possible_colors.set("yellow", 1);
+        possible_colors.set("blue", 3);
+        possible_colors.set("yellow", 2);
         possible_colors.set("magenta", 1);
         possible_colors.set("cyan", 1);
-        possible_colors.set("white", 1);
+        possible_colors.set("white", 2);
         for (let i = 0; i < max_num_colors; i++) {
-            this.attributes.set(`color_${i}`, new Attribute(possible_colors, 3));
+            this.attributes.set(`color_${i}`, new Attribute(possible_colors, 4));
         }
 
         const possible_setts = new Map();
@@ -159,25 +178,25 @@ export class Tartan {
         this.attributes.set("sett", new Attribute(possible_setts, 2));
 
         // extra stripes, added to # of colors (so every color can be used)
-        const max_n_stripes = 10;
-        const possible_n_stripes = new Map();
-        possible_n_stripes.set(0, 2);
-        possible_n_stripes.set(1, 4);
-        possible_n_stripes.set(2, 3);
-        possible_n_stripes.set(3, 2);
-        possible_n_stripes.set(4, 2);
-        possible_n_stripes.set(6, 1);
-        possible_n_stripes.set(8, 1);
-        possible_n_stripes.set(10, 1);
-        this.attributes.set("n_stripes", new Attribute(possible_n_stripes, 4));
+        const max_n_extra_stripes = 10;
+        const possible_n_extra_stripes = new Map();
+        possible_n_extra_stripes.set(0, 2);
+        possible_n_extra_stripes.set(1, 4);
+        possible_n_extra_stripes.set(2, 3);
+        possible_n_extra_stripes.set(3, 2);
+        possible_n_extra_stripes.set(4, 2);
+        possible_n_extra_stripes.set(6, 1);
+        possible_n_extra_stripes.set(8, 1);
+        possible_n_extra_stripes.set(10, 1);
+        this.attributes.set("n_extra_stripes", new Attribute(possible_n_extra_stripes, 4));
 
         // thread counts taken directly from binary sequence -> binomial dist
         const possible_base_thread_counts = new Map();
-        possible_base_thread_counts.set(1, 2);
-        possible_base_thread_counts.set(2, 2);
+        possible_base_thread_counts.set(3, 2);
         possible_base_thread_counts.set(4, 2);
+        possible_base_thread_counts.set(5, 2);
         possible_base_thread_counts.set(6, 1);
-        possible_base_thread_counts.set(8, 1);
+        possible_base_thread_counts.set(7, 1);
         this.attributes.set("base_thread_count", new Attribute(possible_base_thread_counts, 3));
 
         let bit_idx = inst_attrs_from_bytes(this.attributes, seed_bytes);
@@ -187,7 +206,7 @@ export class Tartan {
             this.attributes.delete(`color_${i}`);
         }
 
-        const n_extra_stripes = this.get_attr_val("n_stripes");
+        const n_extra_stripes = this.get_attr_val("n_extra_stripes");
         this.stripes = [];
         for (let i = 0; i < n_colors + n_extra_stripes; i++) {
             const threads_bits = get_bits(seed_bytes, bit_idx, 3);
@@ -203,7 +222,14 @@ export class Tartan {
         secondary_canvas.width = 640;
         secondary_canvas.height = 640;
         this.ctx_secondary = secondary_canvas.getContext("2d");
-        while (cur_x < 320) {
+        const sett = this.get_attr_val("sett");
+        let curr_sett_dir = sett[0];
+        for(let sett_idx = 0; cur_x < 320; sett_idx++) {
+            const next_sett_dir = sett[sett_idx % sett.length];
+            if (next_sett_dir != curr_sett_dir) {
+                this.stripes.reverse();
+            }
+            curr_sett_dir = next_sett_dir;
             for (let i in this.stripes) {
                 const w = this.stripes[i][1];
                 const col_idx = this.stripes[i][0];
@@ -229,19 +255,31 @@ export class Tartan {
             this.ctx_secondary.clearRect(i * 4, 0, 2, 640);
         }
         this.ctx_secondary.rotate(-Math.PI / 4);
-        //this.ctx_secondary.translate(-160, -160);
         this.ctx.drawImage(secondary_canvas, -160, -160);
-
-
-        /*this.geom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        const wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1 } );
-        const line = new THREE.LineSegments(this.geom, wireframe_mat);
-        this.group.add(line);*/
-        //parent_obj.add(this.group);
     }
+
     get_attr_val(name) {
         return this.attributes.get(name).get_val();
     }
+
+    get_prob() {
+        let prob = 1.0;
+        for (let attr of this.attributes.values()) {
+            prob *= attr.get_prob();
+        }
+        return prob;
+    }
+
+    get_rarity() {
+        let sum = 0.0;
+        let max_sum = 0.0;
+        for (let attr of this.attributes.values()) {
+            sum += attr.get_rarity();
+            max_sum += attr.get_max_rarity();
+        }
+        return Math.round(32 * sum / max_sum);
+    }
+
     destroy() {
     }
 }

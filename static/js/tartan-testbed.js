@@ -18,6 +18,12 @@ function gen_tartan() {
     ctx.fillRect(0, 0, 320, 320);
     t = new tartan.Tartan(ctx, tx_bytes);
 
+    let tx = document.getElementById("tx");
+
+    let rarity = document.getElementById("rarity");
+    rarity.innerHTML = '';
+    rarity.appendChild(document.createTextNode(t.get_rarity()));
+
     let attrs = document.getElementById("attrs");
     attrs.innerHTML = '';
     tartan.print_attrs(t, attrs);

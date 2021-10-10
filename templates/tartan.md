@@ -1,3 +1,7 @@
++++
+css: index.css
++++
+
 <html>
 
 # Tartan
@@ -10,6 +14,8 @@
 <p></p>
 
 ## Attributes
+
+Overall rarity score: <span id="rarity"></span>/32
 
 <div id="attrs"></div>
 

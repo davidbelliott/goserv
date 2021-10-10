@@ -1,6 +1,14 @@
 # Notes
 
-[Blue TIM](#blue-tim) / [Chips Challenge](#chips-challenge) / [Pipes](#pipes)
+[Harp Seal Pup](#harp-seal) / [Tim Tebow and the Abalone](#tebow) / [Blue TIM](#blue-tim) / [Chips Challenge](#chips-challenge) / [Pipes](#pipes)
+
+<a name="harp-seal"></a><h2>Harp Seal Pup</h2>
+
+The abalone has been eaten and the hunger satiated! Tim sees a [Baby Harp Seal Pup](http://dons.directory/vault-contents/seal.jpg).
+
+<a name="tebow"></a><h2>Tim Tebow and the Abalone</h2>
+
+One day Tim Tebow wakes up on a long beach. The beach is long and stretches as far as the eye can see! Tebow begins to walk. On one side the solarized waves crash in their rhythms upon the sand. Tebow walks until he is hungry. Then, he walks into the water. The water is cold at first, but timing his approach into the waves he feels his sense gradually acclimatize to the colder temperature. Plunging his head beneath the water, he opens his eyes and finds that the water stings and is clouded with sand. All other means exhausted, he taps the tiny and robust D3PTH diving computer located above his right ear. This is some dense hardware built by the densest engineers in the world! The device emits an audible tone which bounces back from the seafloor, and his ears being full of water can more acutely sense the vibrations in the dense medium. There exists an irregularity! He estimates it to be 16 meters beneath the surface.
 
 <a name="blue-tim"></a><h2>Blue TIM</h2>
 
@@ -54,4 +62,24 @@ I loved insects more than people, and I cried when I saw them die. A girl in my 
 
 # Pipes
 
-COMING SOON
+Bill Gates told me never to use pipes. He said, "A program should not do one thing well. Programs should not work together. Programs should not handle text streams." Then, one night last week, he showed up at the back door of the compound, knocking in the dark. Wanted to give me a shot and a UV tattoo.
+
+I suppose I should back up a bit and preface this with a proper introduction. Acquaintances wanted to know how I was doing. A huge number of my stans were begging for an update, wondering how I was surviving, how I'd handle the pandemic, being homeless and all. I wasn't going to stick around. When I saw the females and the males, I had a premonition that appeared in cellular automata rule space. It manifested a huge black fractal, the parasitic institution, like a thunderous glider. when I saw it I knew I had to get out.
+
+For a while, my car was my home in the desert, bouncing on rutted roads in the night as I prayed for the oil pan. I'd squat on vacant clearings next to abandoned mining roads and airstrips, startling awake in the dead of night with frosted windows and imagined lights flashing outside like a rave with my heart thumping. Then one night, it was real, a rancher rapping on my window with a double-barrel shotgun pointing at my head. He told me, -Mormons aren't welcome in this county. I apologized, sped off like hell and then got high-bottomed in a wash with the wheels spinning. Had to jump out and pile rocks under the tires while I heard him getting closer, ATV headlights shining over the hills and warning shots from his buds echoing across the valley.
+
+I drove through the night to the only place I could think of. never stopping I cruised through decimated small towns, the bedsheet-wrapped dead piled among sagebrush and roadside signs advertising jerky. In the grey early morning I knocked on John's door. We called him Catholic Jack. His house was a huge Victorian structure in crumbling brick, incongruously situated in the heart of the slums and bristling with home-rigged defenses. He was a rogue beekeeper; I'd helped sell his imitation mad honey ("Bishop's Pride") on the black market. People bought it expecting rhododendron, but instead we'd mixed in a contraband blend of home-cooked chemicals that got you ten times more fr*cked up. It came out different every time. We called it "Stubb's special spices." I worshipped C. B. Stubblefield in those days---a great man.
+
+Catholic Jack was known to always keep a nine on him, to defend against hoodlums trying to pilfer honey from his hives. Sure enough, that was the first thing that greeted me through a shattered pane on the front door. I gave him the word. This was close enough.
+
+We were in the compound, living on beans. You had to know the ropes. Everything was booby-trapped and we were inside cooking like chemists. We were cooking with Grignard reagents like it was Chem 3a all over again. Mad honey, traded for mad beans---so many former e-girls were begging for beans we could have had an e-girl harem if we wanted. Instead, Catholic Jack would pull a lever that opened an iron trapdoor under them. It was just like Minecraft. Ammunition was hard to come by. I had always felt that the desert was a sacred place, because all unclean life was purged. It was the godlands, and we were the gods---just us and the virus. the land was brutally clean.
+
+After Bill's visit, things changed. The first night, I said, -Go away. but he still stood there, a pale apparition. Hours later, through a crack, I still saw him in that corner, but in the morning he was gone. He came back twice, eternally patient. For the first time, we felt fear.
+
+I tried to combat the fear by playing PaRappa the Rapper. I had to use WINE because I didn't dare to open a Windows machine. I ran into so many locale issues that eventually I resorted to real life. Everyone was crippled by fear, even the police, so you could do anything. Catholic Jack cooked me up a special batch of spices, a new recipe. I mixed them into my beans. The next night, I woke lying in a reed-choked ditch next to a warehouse, covered in blood. It wasn't my own. My skin was boiling, prickling, and my muscles on the verge of uncontrollable contraction. I stumbled for miles through mud and barbed wire-strewn vacant lots before I found a road I recognized. It was morning before I reached the compound. Catholic Jack let me in without saying a word.
+
+One of Bill's henchman had come by. Catholic Jack showed me the body in the basement, double-bagged with HUSKYⓇ 42-Gallon Contractor Clean-Up Bags. A blacklight showed me everything I needed to know---he was glowing. Catholic Jack told me about how he'd broken in somehow, found me in the bathtub speaking in Adamic. He was gonna sacrifice me to Moloch and steal the beans to feed old Bill. Said I bit his neck and severed the carotid. Didn't remember any of it. He said more of them were out there. We needed to do something bigger.
+
+Around that time, I came in contact with a German chemist named John. I was running a Minecraft server, and we would exchange messages using books so Bill and the feds couldn't eavesdrop. John told me his backstory, how his promising career in academia was ruined by his advocacy for eugenics. I told John we could use his help, devising more potent chemical weapons that we could deploy from our war van to eliminate the M*crosoft employees. He agreed, on the condition that we would cook him Dutch oven meals daily. He loved that Dutch oven cooking. All he did in Minecraft was collect cactus.
+
+The next day, we set out from the compound to retrieve John from the university lab. He'd been in the basement eating zebrafish. I had a Dutch oven with biscuits and one with bean stew in the back of the war van, and John picked up the entire oven to drink the stew. we got to work setting up a production facility in an old hydropower building nearby.
