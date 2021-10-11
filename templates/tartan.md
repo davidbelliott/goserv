@@ -10,7 +10,7 @@ css: index.css
 
 <button id="gen-tartan-button">gen tartan</button>
 <p></p>
-<canvas id="tartan" width="640" height="640" style="image-rendering: pixelated; width: unset"></canvas>
+<canvas id="tartan" width="320" height="320" style="image-rendering: pixelated; width: unset"></canvas>
 <p></p>
 
 ## Attributes

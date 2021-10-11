@@ -24,6 +24,10 @@ class Attribute {
         this.instantiated_value = null;
     }
 
+    set_val(val) {
+        this.instantiated_value = val;
+    }
+
     get_val() {
         return this.instantiated_value;
     }
@@ -201,10 +205,25 @@ export class Tartan {
 
         let bit_idx = inst_attrs_from_bytes(this.attributes, seed_bytes);
 
-        const n_colors = this.get_attr_val("n_colors");
+        let n_colors = this.get_attr_val("n_colors");
         for (let i = n_colors; i < max_num_colors; i++) {
             this.attributes.delete(`color_${i}`);
         }
+
+        const penultimate_color = this.get_attr_val(`color_${n_colors - 2}`);
+        const new_possible_colors = new Map(possible_colors);
+        const add_prob = new_possible_colors.get(penultimate_color);
+        new_possible_colors.delete(penultimate_color);
+        const add_to_key = new_possible_colors.keys().next().value;
+        new_possible_colors.set(add_to_key, new_possible_colors.get(add_to_key) +
+            add_prob);
+        this.attributes.set(`color_${n_colors - 1}`, new Attribute(
+            new_possible_colors, 4));
+        console.log(this.attributes.get(`color_${n_colors - 1}`));
+        let backup_color_bits = get_bits(seed_bytes, bit_idx, 4);
+        bit_idx += 4;
+        this.attributes.get(`color_${n_colors - 1}`).instantiate(
+            backup_color_bits);
 
         const n_extra_stripes = this.get_attr_val("n_extra_stripes");
         this.stripes = [];
@@ -216,7 +235,6 @@ export class Tartan {
         }
 
         const rot = Math.PI * get_bits(seed_bytes, bit_idx, 2) / 12.0;
-        console.log(rot);
         bit_idx += 2;
 
         this.ctx = ctx;
@@ -259,6 +277,11 @@ export class Tartan {
         this.ctx.rotate(Math.PI / 2);
         this.ctx.drawImage(secondary_canvas, -dim / 2, -dim);
         this.ctx.restore();
+    }
+
+    make_colors_unique() {
+
+
     }
 
     get_attr_val(name) {
