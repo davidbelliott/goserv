@@ -7,7 +7,7 @@ let tx_bytes = new Uint8Array(tartan.NUM_BYTES);
 let t = null;
 let canvas = document.getElementById("tartan");
 let ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
+//ctx.imageSmoothingEnabled = false;
 
 function gen_tartan() {
     tx_bytes = crypto_obj.getRandomValues(tx_bytes);
@@ -15,7 +15,7 @@ function gen_tartan() {
         t.destroy();
     }
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 320, 320);
+    ctx.fillRect(0, 0, 640, 640);
     t = new tartan.Tartan(ctx, tx_bytes);
 
     let tx = document.getElementById("tx");

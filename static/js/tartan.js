@@ -214,17 +214,24 @@ export class Tartan {
             let threads = (threads_bits + 1) * this.get_attr_val("base_thread_count");
             this.stripes.push([i % n_colors, threads]);
         }
-        console.log(this.stripes);
+
+        const rot = Math.PI * get_bits(seed_bytes, bit_idx, 2) / 12.0;
+        console.log(rot);
+        bit_idx += 2;
 
         this.ctx = ctx;
+        const dim = 2 * Math.min(this.ctx.canvas.clientWidth,
+            this.ctx.canvas.clientHeight);
+        this.ctx.save();
         let cur_x = 0;
         const secondary_canvas = document.createElement("canvas");
-        secondary_canvas.width = 640;
-        secondary_canvas.height = 640;
+        secondary_canvas.width = dim;
+        secondary_canvas.height = dim;
         this.ctx_secondary = secondary_canvas.getContext("2d");
         const sett = this.get_attr_val("sett");
         let curr_sett_dir = sett[0];
-        for(let sett_idx = 0; cur_x < 320; sett_idx++) {
+        //this.ctx.rotate(rot);
+        for(let sett_idx = 0; cur_x < dim; sett_idx++) {
             const next_sett_dir = sett[sett_idx % sett.length];
             if (next_sett_dir != curr_sett_dir) {
                 this.stripes.reverse();
@@ -237,25 +244,21 @@ export class Tartan {
                 const col_val = COLORS.get(col_name);
                 const fill = get_color_hex_str(col_val);
                 this.ctx_secondary.fillStyle = fill;
-                this.ctx_secondary.fillRect(cur_x + 160, 160, w, 320);
+                this.ctx_secondary.fillRect(cur_x, 0, w, dim);
                 cur_x += w;
             }
         }
-        this.ctx.rotate(Math.PI / 2);
-        this.ctx.translate(0, -320);
-        ctx.drawImage(secondary_canvas, -160, -160);
-        this.ctx.translate(0, 320);
-        this.ctx.rotate(-Math.PI / 2);
+        this.ctx.rotate(rot);
+        this.ctx.drawImage(secondary_canvas, 0, -dim / 2);
 
-        this.ctx_secondary.translate(320, 0);
         this.ctx_secondary.rotate(Math.PI / 4);
-        for (let i = 0; i < 160; i++) {
-            this.ctx_secondary.fillStyle = "#000000";
-            //this.ctx_secondary.fillRect(i * 4, 0, 2, 640);
-            this.ctx_secondary.clearRect(i * 4, 0, 2, 640);
+        for (let i = 0; i < dim / 2; i++) {
+            this.ctx_secondary.fillStyle = "#FFFF00";
+            this.ctx_secondary.clearRect(i * 4, -dim, 2, dim * 2);
         }
-        this.ctx_secondary.rotate(-Math.PI / 4);
-        this.ctx.drawImage(secondary_canvas, -160, -160);
+        this.ctx.rotate(Math.PI / 2);
+        this.ctx.drawImage(secondary_canvas, -dim / 2, -dim);
+        this.ctx.restore();
     }
 
     get_attr_val(name) {
