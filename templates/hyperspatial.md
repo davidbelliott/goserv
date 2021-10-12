@@ -10,5 +10,3 @@
 <script type="module" defer src="/static/js/hyper.js"></script>
 
 </html>
-
-<a href="#" onclick="start_scene('demo');">DEMO</a>

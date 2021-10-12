@@ -5,7 +5,7 @@ import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.
 
 var cur_scene_idx = 0;
 const cam_persp = new THREE.PerspectiveCamera( 75, 1, 0.1, 10000 );
-const cam_orth = new THREE.OrthographicCamera( 8, -8, 8, -8, -8, 1000);
+const cam_orth = new THREE.OrthographicCamera( -8, 8, 8, -8, -8, 1000);
 stellated.set_cam(cam_persp);
 
 //var canvas = null;
@@ -129,7 +129,8 @@ const Channels = {
     FOOT_1_Z: 3,
     ARM_MODE: 5,
     ARM_MOVEMENT: 4,
-    MAX: 6
+    MAN_HEIGHT: 6,
+    MAX: 7
 }
 
 const ArmMode = {
@@ -140,6 +141,7 @@ const ArmMode = {
 
 let curr_spacing = 0;
 let curr_tesseract_scale = 0;
+let curr_man_scale = 0;
 let curr_arm_rot = 0;
 
 function init_demo(scene, camera) {
@@ -297,11 +299,11 @@ function update_demo(paused, song_time, ch_amps) {
     demo.tesseract.rot_xw -= 0.05;
     demo.tesseract.update_geom();
 
-    if (song_beat != song_beat_prev && song_beat % 2 == 0) {// && rand_int(2) == 0) {
+    if (song_beat != song_beat_prev && song_beat % 2 == 0 || paused) {// && rand_int(2) == 0) {
         if (go_to_target) {
             const manhattan_dist = Math.abs(target_rot[0] - rot[0]) +
                 Math.abs(target_rot[1] - rot[1], );
-            if (manhattan_dist <= 8) {
+            if ((!paused && manhattan_dist <= 8) || manhattan_dist <= 4) {
                 go_to_target = false;
             }
         }
@@ -345,58 +347,86 @@ function update_demo(paused, song_time, ch_amps) {
     let coeff = 0.10;
 
     let target_spacing = 0;
+    let target_man_scale = 0;
+    let target_man_pos = new THREE.Vector3(0, 2.15, -0.2);
 
     let target_tesseract_scale = 0;
     let target_tesseract_pos = new THREE.Vector3();
 
-    if (song_beat < 4 * 52 && stellated.get_cam() != cam_persp) {
+    if ((song_beat < 4 * 48 || song_beat >= 4 * 176) &&
+            stellated.get_cam() != cam_persp) {
         stellated.set_cam(cam_persp);
-    } else if (song_beat >= 4 * 52 && stellated.get_cam() != cam_orth) {
+    } else if ((song_beat >= 4 * 48 && song_beat < 4 * 176) &&
+            stellated.get_cam() != cam_orth) {
         stellated.set_cam(cam_orth);
     }
 
-    if (song_beat >= 4 * 4 && song_beat < 4 * 20) {
+    if (song_beat >= 4 * 8 && song_beat < 4 * 16) {
         target_tesseract_scale = 1;
         target_tesseract_pos.set(0, 0.5, 2.75);
-    } else if (song_beat >= 4 * 20) {
-        target_tesseract_scale = 4
-        target_tesseract_pos.set(0, 0, 0);
-    }
-
-
-    if (song_beat >= 4 * 20 && song_beat < 4 * 52) {
+        target_man_scale = 0;
+        target_man_pos.set(0, -4, -0.2);
+    } else if (song_beat >= 4 * 16 && song_beat < 4 * 48) {
         target_spacing = 7;
         target_tesseract_scale = 0;
         target_tesseract_pos.set(0, 0, 0);
-    } else if (song_beat >= 4 * 52 && song_beat < 4 * 84) {
+        target_man_scale = 0;
+        target_man_pos.set(0, -4, -0.2);
+    } else if (song_beat >= 4 * 48 && song_beat < 4 * 80) {
         coeff = 0.011;
         target_spacing = 0;
         target_tesseract_scale = 1;
         target_tesseract_pos.set(0, 0.5, 2.75);
-    } else if (song_beat >= 4 * 84 && song_beat < 4 * 116) {
+        target_man_scale = 0;
+        target_man_pos.set(0, -4, -0.2);
+    } else if (song_beat >= 4 * 80 && song_beat < 4 * 96) {
+        target_spacing = 7;
+        target_tesseract_scale = 0;
+        target_tesseract_pos.set(0, 0, 0);
+        target_man_scale = 2;
+        target_man_pos.set(0, 2.15, -0.2);
+    } else if (song_beat >= 4 * 96 && song_beat < 4 * 112) {
         target_spacing = 7;
         target_tesseract_scale = 4;
         target_tesseract_pos.set(0, 0, 0);
-    } else if (song_beat >= 4 * 116 && song_beat < 4 * 148) {
+        target_man_scale = 0;
+        target_man_pos.set(0, -4, -0.2);
+    } else if (song_beat >= 4 * 112 && song_beat < 4 * 144) {
         coeff = 0.0025;
         target_spacing = 0;
         target_tesseract_scale = 1;
         target_tesseract_pos.set(0, 0.5, 2.75);
-    } else if (song_beat >= 4 * 148) {
+        target_man_scale = 2;
+        target_man_pos.set(0, 2.15, -0.2);
+    } else if (song_beat >= 4 * 144 && song_beat < 4 * 184) {
         target_spacing = 7;
         target_tesseract_scale = 4;
         target_tesseract_pos.set(0, 0, 0);
+        target_man_scale = 2;
+        target_man_pos.set(0, 2.15, -0.2);
+    } else if (song_beat >= 4 * 184) {
+        coeff = 0.011;
+        target_spacing = 0;
+        target_man_scale = 0;
+        target_man_pos.set(0, -4, -0.2);
+        target_tesseract_scale = 1;
+        target_tesseract_pos.set(0, 0.5, 2.75);
     }
 
     curr_spacing = lerp(curr_spacing, target_spacing, coeff);
     curr_tesseract_scale = lerp(curr_tesseract_scale, target_tesseract_scale, 0.05);
+    curr_man_scale = lerp(curr_man_scale, target_man_scale, 0.05);
     demo.tesseract_group.scale.set(curr_tesseract_scale, curr_tesseract_scale, curr_tesseract_scale);
     let tess_pos = demo.tesseract_group.position.toArray();
     let target_tess_pos = target_tesseract_pos.toArray();
-    for (let i in tess_pos) {
+    let man_pos_arr = demo.anaman_group.position.toArray();
+    let target_man_pos_arr = target_man_pos.toArray();
+    for (let i = 0; i < 3; i++) {
         tess_pos[i] = lerp(tess_pos[i], target_tess_pos[i], 0.05);
+        man_pos_arr[i] = lerp(man_pos_arr[i], target_man_pos_arr[i], 0.05);
     }
     demo.tesseract_group.position.fromArray(tess_pos);
+    demo.anaman_group.position.fromArray(man_pos_arr);
 
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
@@ -406,8 +436,8 @@ function update_demo(paused, song_time, ch_amps) {
         }
     }
 
-    demo.robots[4].obj.visible = (song_beat < 4 * 84);
-    demo.anaman_group.visible = !demo.robots[4].obj.visible;
+    demo.robots[4].obj.visible = (song_beat < 4 * 80);
+    let curr_man_scale_y = curr_man_scale;
 
     if (!paused) {
         for (let i in demo.robots) {
@@ -434,6 +464,10 @@ function update_demo(paused, song_time, ch_amps) {
             // Arm movement
             const arm_mode = ch_amps[ch_idx++];
             const arm_move = ch_amps[ch_idx++];
+
+            const man_height = ch_amps[ch_idx++];
+
+            curr_man_scale_y = 2 * man_height * curr_man_scale;
 
             let target_arm_rot = 0;
             let arm_extension = 0;
@@ -476,6 +510,7 @@ function update_demo(paused, song_time, ch_amps) {
             }
         }
     }
+    demo.anaman_group.scale.set(curr_man_scale, curr_man_scale_y, curr_man_scale);
     //demo.cubes_group.rotation.y = Math.pow((1 - Math.sin((song_time / 60.0 * 110 * 2) * Math.PI)) / 2, 2) * Math.PI / 32;
     demo.all_group.rotation.x = rot[0] * Math.PI / div;
     demo.all_group.rotation.y = rot[1] * Math.PI / div;
