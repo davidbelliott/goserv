@@ -1,6 +1,6 @@
-import * as THREE from '/static/js/three.js/build/three.module.js';
+import * as THREE from '/static/js/three.js/build/three.module.min.js';
 
-const MAX_AMPL = 32767;
+export const MAX_AMPL = 32767;
 const VIDEO_LATENCY = 0.07; // how much the video typically lags the audio
 const BIN_RES = 126;
 
@@ -86,7 +86,7 @@ function load_envelopes(tracks) {
     oreq.send();
 }
 
-function get_freqs(song_time) {
+export function get_freqs(song_time) {
     if (envelopes == null) {
         return [];
     }

@@ -58,14 +58,14 @@ class Attribute {
     get_max_rarity() {
         const all_rel_probs = Array.from(this.possible_values.values());
         all_rel_probs.sort(function(a, b){ return a - b });     // sort descending
-        return (all_rel_probs.findIndex(p => p == all_rel_probs[all_rel_probs.length - 1])) / this.possible_values.size;
+        return (all_rel_probs.findIndex(p => p == all_rel_probs[all_rel_probs.length - 1])) / (this.possible_values.size - 1);
     }
 
     get_rarity() {
         const this_rel_prob = this.possible_values.get(this.instantiated_value);
         const all_rel_probs = Array.from(this.possible_values.values());
         all_rel_probs.sort(function(a, b){ return b - a });     // sort descending
-        return (all_rel_probs.findIndex(p => p == this_rel_prob)) / this.possible_values.size;
+        return (all_rel_probs.findIndex(p => p == this_rel_prob)) / (this.possible_values.size - 1);
     }
 }
 
@@ -131,6 +131,11 @@ export function print_attrs(tartan, p) {
         td_value.appendChild(document.createTextNode(attr.get_val()));
         let td_rarity = tr.insertCell();
         td_rarity.appendChild(document.createTextNode(attr.get_rarity()));
+        for (let [val, prob] of attr.possible_values) {
+            let td_prob = tr.insertCell();
+            let prob_norm = prob / Math.pow(2, attr.bit_width);
+            td_prob.appendChild(document.createTextNode(val + ': ' + prob_norm));
+        }
     }
     p.appendChild(tbl);
 }
@@ -203,6 +208,16 @@ export class Tartan {
         possible_base_thread_counts.set(7, 1);
         this.attributes.set("base_thread_count", new Attribute(possible_base_thread_counts, 3));
 
+
+
+        const possible_rotations = new Map();
+        possible_rotations.set(0, 3);
+        possible_rotations.set(15, 2);
+        possible_rotations.set(30, 1);
+        possible_rotations.set(45, 2);
+        this.attributes.set("rotation", new Attribute(possible_rotations, 3));
+
+
         let bit_idx = inst_attrs_from_bytes(this.attributes, seed_bytes);
 
         let n_colors = this.get_attr_val("n_colors");
@@ -234,8 +249,7 @@ export class Tartan {
             this.stripes.push([i % n_colors, threads]);
         }
 
-        const rot = Math.PI * get_bits(seed_bytes, bit_idx, 2) / 12.0;
-        bit_idx += 2;
+        const rot = this.get_attr_val("rotation") * Math.PI / 180.0;
 
         this.ctx = ctx;
         const dim = 2 * Math.min(this.ctx.canvas.clientWidth,

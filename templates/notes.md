@@ -1,6 +1,14 @@
 # Notes
 
-[Harp Seal Pup](#harp-seal) / [Tim Tebow and the Abalone](#tebow) / [Blue TIM](#blue-tim) / [Chips Challenge](#chips-challenge) / [Pipes](#pipes)
+[Pipes II: Exile of Tebow](#pipes-2) / [Harp Seal Pup](#harp-seal) / [Tim Tebow and the Abalone](#tebow) / [Blue TIM](#blue-tim) / [Chips Challenge](#chips-challenge) / [Pipes](#pipes)
+
+<a name="pipes-2"></a><h2>Pipes II: Exile of Tebow</h2>
+
+It was dusk when Tebow found he had erred. He and the roommates agreed it was he who must go. At some point, things had been done in the wrong order. He had begun by modeling the individual as an extrapolating stateful functor operating on an n-dimensional experiential field when perhaps he should have started by modeling society as an interpolating stateless operating function of a time-varying random variable. In any case, Tebow had been weighed in the balances and was found wanting, and a punishment of death in exile was found suitable for the crime. His first-principles approach wasn't first-principles enough---he may have found the root cause but he didn't find the root cause of the root cause, and what use is that!
+
+In the home state, Tebow began by tilling the earth.
+
+TO BE CONTINUED
 
 <a name="harp-seal"></a><h2>Harp Seal Pup</h2>
 
@@ -40,7 +48,7 @@ That night as Tim lies by the fire he recounts how the axe head came loose from 
 
 apt fighters they were, yet not the aptest—for as Tim now crosses the solitary waste, in the wary recesses of his mind swim memories of a foe he never knew, one which his ancestors had last confronted some 40 kyrs prior. A group of ten h\*mo sapiens burst from shrubbery in the cold dusk to surround a lone Neanderthal. .. some eight feet tall he is, with vertical slit pupils piercing yellow eyes. 22pl8 DL. +8std IQ. A fearful visage to behold, yet a Voice quite mellifluous and charming. For behind his apelike features one might find a man solemn and wise beyond reason, a giant in realms both psychic and physical.
 
-Were one to have the privilege to hear him speak, one would be awed by the precision of his natural language, one of few words yet impossibly descriptive, instantly understood even by those who never heard it before. Indeed, his is the Adamic tongue—every word mapping precisely to a concept and a glyph, a token and sign. Upon hearing the utterance of each word, the corresponding glyph would appear etched in one's mind with utmost clarity, a sacred and pure pictogram most pleasing to behold. Indeed the pronunciation of sound accompanying the information stream is but embellishment—between those of his kind, speech is purely decorative, a form of song which harmonizes with the rapid flow of conceptual imagery conveyed by thought-exchange alone.
+Were one to have the privilege to hear him speak, one would be awed by the precision of his natural language, one of few words yet impossibly descriptive, instantly understood even by those who never heard it before. Indeed, his is the Adamic tongue—every word mapping precisely to a concept and a glyp. Upon hearing the utterance of each word, the corresponding glyph would appear etched in one's mind with utmost clarity, a sacred and pure pictogram most pleasing to behold. Indeed the pronunciation of sound accompanying the information stream is but embellishment—between those of his kind, speech is purely decorative, a form of song which harmonizes with the rapid flow of conceptual imagery conveyed by thought-exchange alone.
 
 Now, he finds himself outnumbered by this bothersome foe—one of irreverent proliferation, brute socialization, a reprehensible dependency on that parasitic fungus of domestication and amalgamation. To such an apparatus he would never submit, though he confront the toil of life alone; he knows his toil to be righteous, and loathes the false relief of willing self-enslavement. Thus, despite his near-perfect knowledge, he still finds himself perplexed by his soon-defeat at the hands of this inferior species: surely things were not meant to be this way?
 

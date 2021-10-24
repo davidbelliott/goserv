@@ -635,13 +635,14 @@ func main() {
     if user_err != nil {
         log.Fatal(user_err)
     }
+    fs := http.FileServer(http.Dir("./static"))
     r := http.DefaultServeMux
     r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
     r.HandleFunc("/todo", basic_auth(todo_handler, valid_users, "todo"))
     r.HandleFunc("/todo/do", basic_auth(todo_do_handler, valid_users, "todo"))
     r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
-    //r.Handle("/" + static_url + "/", http.StripPrefix("/" + static_url + "/", http.FileServer(http.Dir(static_url))))
+    r.Handle("/static/", http.StripPrefix("/static/", fs))
     var err error
     if *local != "" { // Run as a local web server
         err = http.ListenAndServe(*local, r)

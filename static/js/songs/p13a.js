@@ -1,4 +1,4 @@
-import * as THREE from '/static/js/three.js/build/three.module.js';
+import * as THREE from '/static/js/three.js/build/three.module.min.js';
 
 const p13a = {
     kick_cubes: [],

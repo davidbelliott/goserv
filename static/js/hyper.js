@@ -1,4 +1,4 @@
-import * as THREE from '/static/js/three.js/build/three.module.js';
+import * as THREE from '/static/js/three.js/build/three.module.min.js';
 import * as stellated from '/static/js/stellated.js';
 import { Tesseract } from '/static/js/highdim.js';
 import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.js';
@@ -144,7 +144,7 @@ let curr_tesseract_scale = 0;
 let curr_man_scale = 0;
 let curr_arm_rot = 0;
 
-function init_demo(scene, camera) {
+function init_demo(scene) {
     demo.all_group = new THREE.Group();
     demo.robot_group = new THREE.Group();
     demo.anaman_group = new THREE.Group();
@@ -183,69 +183,6 @@ function init_demo(scene, camera) {
     cam_persp.position.set(0, 0, 8);
     cam_orth.position.set(0, 0, 8);
     return Channels.MAX;
-}
-
-function init_cube_projection(scene, camera) {
-    let wireframe = new THREE.EdgesGeometry(new THREE.BoxGeometry());
-    const wireframe_mat = new THREE.LineBasicMaterial( { color: "yellow", linewidth: 1 } );
-    mesh = new THREE.LineSegments(wireframe, wireframe_mat);
-    scene.add(mesh);
-    camera.position.set(0, 0, 1);
-}
-
-function start_cube_projection(scene, camera) {
-    for (let i = 0; i < n_dimensions; i++) {
-        if (oscs[i] != null) {
-            oscs[i].stop();
-        }
-    }
-    n_dimensions = 3;
-    cube_started = true;
-    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-    gain = audioCtx.createGain();
-    gain.gain.value = 0.01;
-    gain.connect(audioCtx.destination);
-    oscs = new Array(n_dimensions).fill(null);
-    pans = new Array(n_dimensions).fill(null);
-    audio_src_vecs = new Array(n_dimensions).fill(null);
-    for (let i = 0; i < n_dimensions; i++) {
-        audio_src_vecs[i] = new THREE.Vector4(0, 0, 0, 0);
-        audio_src_vecs[i].setComponent(i, 1);
-        oscs[i] = audioCtx.createOscillator();;
-        pans[i] = audioCtx.createStereoPanner();
-        oscs[i].connect(pans[i]);
-        pans[i].connect(gain);
-        pans[i].pan.value = -1.0;
-    }
-    mesh.rotation.set(0, 0, 0);
-    camera.position.set(0, 0, 1);
-    playNote(0, 500);
-    playNote(1, 1000);
-    playNote(2, 10000);
-}
-
-function update_cube_projection(scene, camera) {
-    if (!cube_started) {
-        return;
-    }
-    if (camera.position.z < 2.0) {
-        camera.position.z += (2.0 - camera.position.z) / 60.0;
-    }
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-
-    var matrix = new THREE.Matrix4();
-    matrix.extractRotation(mesh.matrix);
-
-    let ear_vec_3 = new THREE.Vector3(1, 0, 0, 0);
-    ear_vec_3.applyMatrix4(matrix);
-
-    let ear_vec = new THREE.Vector4(ear_vec_3.x, ear_vec_3.y, ear_vec_3.z, 0);
-
-    for (let i = 0; i < n_dimensions; i++) {
-        let dot = ear_vec.dot(audio_src_vecs[i]);
-        pans[i].pan.value = dot;
-    }
 }
 
 function rand_int(max) {
@@ -373,7 +310,7 @@ function update_demo(paused, song_time, ch_amps) {
         target_man_scale = 0;
         target_man_pos.set(0, -4, -0.2);
     } else if (song_beat >= 4 * 48 && song_beat < 4 * 80) {
-        coeff = 0.011;
+        coeff = 0.003;
         target_spacing = 0;
         target_tesseract_scale = 1;
         target_tesseract_pos.set(0, 0.5, 2.75);

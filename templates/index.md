@@ -25,7 +25,7 @@ Welcome to my home on the World Wide Web.
 |[Notes](notes)|Notes|
 |[Hardware](hardware)|Hardware|
 |[Software](software)|Software|
-|Matrix Homeserver|Self-hosted chatrooms|
+|[Hyperspatial](hyperspatial)|Autonomous Rhythms|
 |[Repositories](git)|Self-hosted `git` repositories|
 |Handheld Hymn Generator|A portable and durable hymn-generation device|
 |[Network](network)|Related sites for your browsing pleasure|
