@@ -11,7 +11,8 @@ const p13a = {
     icos: null
 }
 
-export function init(scene, camera) {
+export function init(scene) {
+    var camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
     //renderer.context.disable(renderer.context.DEPTH_TEST);
     p13a.cubes_group = new THREE.Group();
     for (const i in p13a.kick_cubes_base_y) {
@@ -70,7 +71,7 @@ export function init(scene, camera) {
     scene.add(p13a.cubes_group);
 
     camera.position.set(0, 0, 5);
-    return 5;
+    return [5, camera];
 }
 
 export function updt(paused, song_time, ch_amps) {

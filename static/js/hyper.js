@@ -6,7 +6,6 @@ import { GLTFLoader } from '/static/js/three.js/examples/jsm/loaders/GLTFLoader.
 var cur_scene_idx = 0;
 const cam_persp = new THREE.PerspectiveCamera( 75, 1, 0.1, 10000 );
 const cam_orth = new THREE.OrthographicCamera( -8, 8, 8, -8, -8, 1000);
-stellated.set_cam(cam_persp);
 
 //var canvas = null;
 //var renderer = null;
@@ -182,7 +181,7 @@ function init_demo(scene) {
 
     cam_persp.position.set(0, 0, 8);
     cam_orth.position.set(0, 0, 8);
-    return Channels.MAX;
+    return [Channels.MAX, cam_persp];
 }
 
 function rand_int(max) {

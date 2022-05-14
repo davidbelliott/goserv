@@ -5,7 +5,7 @@ const VIDEO_LATENCY = 0.07; // how much the video typically lags the audio
 const BIN_RES = 126;
 
 var scenes = null;
-var camera = new THREE.PerspectiveCamera( 75, 2, 0.1, 1000 );
+var cameras = null;
 
 var canvas = null;
 export var renderer = null;
@@ -30,8 +30,6 @@ class LoadEnvelopeCallback {
         this.bigbit = bigbit;
     }
     handleEvent(oevent) {
-        console.log("receive envelope");
-        console.log(this.index);
         var arraybuffer = this.oreq.response;
         if (arraybuffer) {
             if (this.bigbit) {
@@ -44,11 +42,11 @@ class LoadEnvelopeCallback {
 }
 
 export function set_cam(cam) {
-    camera = cam;
+    cameras[last_visualized_song_idx] = cam;
 }
 
 export function get_cam() {
-    return camera;
+    return cameras[last_visualized_song_idx];
 }
 
 export function init(tracks, init_funcs) {
@@ -61,11 +59,24 @@ export function init(tracks, init_funcs) {
     renderer.setClearColor("black");
     renderer.setPixelRatio( window.devicePixelRatio );
     scenes = Array(tracks.length).fill(null);
+    cameras = Array(tracks.length).fill(null);
     num_chs = Array(tracks.length).fill(0);
     for (var i = 0; i < tracks.length; i++) {
-        scenes[i] = new THREE.Scene();
         if (init_funcs[i] != null) {
-            num_chs[i] = init_funcs[i](scenes[i], camera);
+            scenes[i] = new THREE.Scene();
+            let ret = init_funcs[i](scenes[i]);
+            num_chs[i] = ret[0];
+            cameras[i] = ret[1];
+        } else {
+            scenes[i] = null;
+            num_chs[i] = 0;
+            cameras[i] = null;
+        }
+    }
+    for (let i = 0; i < tracks.length; i++) {
+        if (init_funcs[i] != null) {
+            last_visualized_song_idx = i;
+            break;
         }
     }
 }
@@ -145,8 +156,12 @@ function resizeCanvasToDisplaySize() {
     if (canvas.width !== width || canvas.height !== height) {
         // you must pass false here or three.js sadly fights the browser
         renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+        for (let i in cameras) {
+                if (cameras[i] != null) {
+                        cameras[i].aspect = width / height;
+                        cameras[i].updateProjectionMatrix();
+                }
+        }
 
         // update any render target sizes here
     }
@@ -169,7 +184,6 @@ export function time_update() {
         last_known_song_time = all_players[now_playing_idx].audio.currentTime;
         clock.start();
     }
-    console.log("time update")
 }
 
 export function seeked() {
@@ -195,5 +209,6 @@ export function frame(update_funcs, composer) {
     } else {
         update_funcs[last_visualized_song_idx](true, 0.0, Array(num_chs[0]).fill(0));
     }
-    renderer.render(scenes[last_visualized_song_idx], camera);
+    renderer.render(scenes[last_visualized_song_idx],
+            cameras[last_visualized_song_idx]);
 }

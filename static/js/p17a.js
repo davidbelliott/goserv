@@ -1,12 +1,10 @@
 import * as stellated from '/static/js/stellated.js';
-import * as p13a from '/static/js/songs/p13a.js';
-import * as p10a from '/static/js/songs/p10a.js';
-import * as p8b from '/static/js/songs/p8b.js';
+import * as p17a from '/static/js/songs/p17a.js';
 
 
-const tracks = ["p15-b", "p13-a", "p10-a", "p8-b", "p7-c", "p6-a", "p5-a", "p4-b"];
-const init_funcs =    [null, p13a.init, p10a.init, p8b.init, null, null, null, null];
-const update_funcs =  [null, p13a.updt, p10a.updt, p8b.updt, null, null, null, null];
+const tracks = ["p17-a"];
+const init_funcs =    [p17a.init];
+const update_funcs =  [p17a.updt];
 
 const players = populate_tracks(tracks, true);
 

@@ -23,8 +23,13 @@ function populate_tracks(tracks, dl_link=true) {
             t_div.appendChild(link);
         }
 	t_div.appendChild(player);
-	tracks_div.appendChild(t_div);
-	tracks_div.appendChild(document.createElement('br'));
+        var target_div = tracks_div;
+        if (tracks_div == null) {
+            console.log(trackname);
+            target_div = document.getElementById(trackname);
+        }
+	target_div.appendChild(t_div);
+	target_div.appendChild(document.createElement('br'));
     }
     all_players = players;
     return players;

@@ -23,9 +23,7 @@ Welcome to my home on the World Wide Web.
 |[Music](music)|Homemade music|
 |[Bible](bible)|Bible|
 |[Notes](notes)|Notes|
-|[Hardware](hardware)|Hardware|
-|[Software](software)|Software|
-|[Hyperspatial](hyperspatial)|Autonomous Rhythms|
+|[Hardware](hardware)|Hardware Projects|
 |[Repositories](git)|Self-hosted `git` repositories|
-|Handheld Hymn Generator|A portable and durable hymn-generation device|
+|[Software](software)|Useful software|
 |[Network](network)|Related sites for your browsing pleasure|
