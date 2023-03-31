@@ -641,8 +641,8 @@ func main() {
     r.HandleFunc("/todo/do", basic_auth(todo_do_handler, valid_users, "todo"))
     r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
-    //fs := http.FileServer(http.Dir("./static"))
-    //r.Handle("/static/", http.StripPrefix("/static/", fs))
+    fs := http.FileServer(http.Dir("./static"))
+    r.Handle("/static/", http.StripPrefix("/static/", fs))
     var err error
     if *local != "" { // Run as a local web server
         err = http.ListenAndServe(*local, r)
