@@ -21,8 +21,8 @@ Welcome to my home on the World Wide Web.
 |:--|:--|
 |[Glen Canyon Archive](glen)|Documenting the now-submerged Glen Canyon|
 |[Music](music)|Homemade music|
+|[Visuals](visuals)|Reactive visuals|
 |[Bible](bible)|Bible|
-|[Notes](notes)|Notes|
 |[Hardware](hardware)|Hardware Projects|
 |[Repositories](git)|Self-hosted `git` repositories|
 |[Software](software)|Useful software|
