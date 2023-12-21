@@ -1,3 +1,4 @@
 templates/todo.md
 instance
 build
+*.tar.gz
