@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    networks:
+      - deadfacade-network
+
+  webserver:
+    build:
+      context: ./webserver
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - deadfacade-network
+    depends_on:
+      - webapp
+
+networks:
+  deadfacade-network:

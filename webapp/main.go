@@ -6,7 +6,6 @@ import (
     "strings"
     "strconv"
     "log"
-    "encoding/csv"
     "encoding/json"
     "io"
     "io/ioutil"
@@ -587,42 +586,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
     show_page_at_url(r.URL.Path, w, r)
 }
 
-func load_valid_users(filepath string) (map[string]string, error) {
-    f, err := os.Open(filepath)
-    if err != nil {
-        return nil, err
-    }
-    lines, err := csv.NewReader(f).ReadAll()
-    if err != nil {
-        return nil, err
-    }
-    valid_users := make(map[string]string, len(lines))
-    for _, line := range lines {
-        if len(line) != 2 {
-            return nil, errors.New("invalid entry in valid users file")
-        }
-        valid_users[line[valid_users_user_col]] = line[valid_users_password_col]
-    }
-    return valid_users, nil
-}
-
-func basic_auth(handler http.HandlerFunc, valid_users map[string]string,
-    realm string) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        user, pass, auth_ok := r.BasicAuth()
-
-        user_pw, user_ok := valid_users[user]
-
-        if !auth_ok || !user_ok || pass != user_pw {
-            w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
-            w.WriteHeader(401)
-            w.Write([]byte("Unauthorised.\n"))
-            return
-        }
-        handler(w, r)
-    }
-}
-
 var (
     local = flag.String("local", "", "serve as webserver, example: 0.0.0.0:8000")
     tcp   = flag.String("tcp", "", "serve as FCGI via TCP, example: 0.0.0.0:8000")
@@ -631,15 +594,8 @@ var (
 
 func main() {
     flag.Parse()
-    valid_users, user_err := load_valid_users("instance/valid_users.csv")
-    if user_err != nil {
-        log.Fatal(user_err)
-    }
     r := http.DefaultServeMux
     r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
-    r.HandleFunc("/todo", basic_auth(todo_handler, valid_users, "todo"))
-    r.HandleFunc("/todo/do", basic_auth(todo_do_handler, valid_users, "todo"))
-    r.HandleFunc("/matrix/signup", matrix_signup_handler)
     r.HandleFunc("/", handler)
     fs := http.FileServer(http.Dir("./static"))
     r.Handle("/static/", http.StripPrefix("/static/", fs))
