@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  webapp:
+    image: "goserv-webapp"
+    networks:
+      - deadfacade-network
+
+  webserver:
+    image: "goserv-webserver"
+    ports:
+      - "80:80"
+    networks:
+      - deadfacade-network
+    depends_on:
+      - webapp
+
+networks:
+  deadfacade-network:

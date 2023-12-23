@@ -4,3 +4,4 @@ build
 dist
 *.tar.gz
 node_modules
+__pycache__
