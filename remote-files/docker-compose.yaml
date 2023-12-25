@@ -4,16 +4,22 @@ services:
   webapp:
     image: "goserv-webapp"
     networks:
-      - deadfacade-network
+      - container-network
 
   webserver:
     image: "goserv-webserver"
     ports:
       - "80:80"
+      - "443:443"
     networks:
-      - deadfacade-network
+      - container-network
+    volumes:
+      - cert-volume:/etc/letsencrypt
     depends_on:
       - webapp
 
 networks:
-  deadfacade-network:
+  container-network:
+
+volumes:
+  cert-volume:
