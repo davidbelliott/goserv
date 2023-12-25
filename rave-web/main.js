@@ -109,8 +109,8 @@ function connect() {
     let pathname = window.location.pathname;
     pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
     const protocol = (location.protocol === 'https:' ? 'wss' : 'ws');
-    //const socket = new WebSocket(`${protocol}://${window.location.hostname}${pathname}ws`);
-    const socket = new WebSocket(`ws://192.168.1.2:8765`);
+    const socket = new WebSocket(`${protocol}://${window.location.hostname}${pathname}ws`);
+    //const socket = new WebSocket(`ws://192.168.1.2:8765`);
     socket.addEventListener('message', function(e) {
 	const msg = JSON.parse(e.data);
         const type = msg.msg_type;

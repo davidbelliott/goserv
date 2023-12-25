@@ -5,6 +5,7 @@ services:
     image: "goserv-webapp"
     networks:
       - container-network
+    restart: on-failure
 
   webserver:
     image: "goserv-webserver"
@@ -17,6 +18,7 @@ services:
       - cert-volume:/etc/letsencrypt
     depends_on:
       - webapp
+    restart: on-failure
 
 networks:
   container-network:
