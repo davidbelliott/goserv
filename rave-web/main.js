@@ -21,6 +21,7 @@ import { FastCarScene } from './src/fast_car_scene.js';
 import { CubeLockingScene } from './src/cube_locking_scene.js';
 import { YellowRobotScene } from './src/yellow_robot_scene.js';
 import { SpinningRobotsScene } from './src/spinning_robots_scene.js';
+import { DrumboxScene } from './src/drumboxes_scene.js';
 
 
 import {
@@ -109,7 +110,9 @@ function connect() {
     let pathname = window.location.pathname;
     pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
     const protocol = (location.protocol === 'https:' ? 'wss' : 'ws');
-    const socket = new WebSocket(`${protocol}://${window.location.hostname}${pathname}ws`);
+    const relay_url = (import.meta.env.MODE === 'development') ?
+        '192.168.1.37:8765' : `${window.location.hostname}${pathname}ws`;
+    const socket = new WebSocket(`${protocol}://${relay_url}`);
     //const socket = new WebSocket(`ws://192.168.1.2:8765`);
     socket.addEventListener('message', function(e) {
 	const msg = JSON.parse(e.data);
@@ -740,6 +743,7 @@ class GraphicsContext {
         this.tracers = false;
         this.clock = new THREE.Clock(true);
         this.scenes = [
+            new DrumboxScene(env),
             new SlideScene(env, ["img/cover.png", "img/santa-claus.jpg", "img/santa-claus-2.png"]),
             new IntroScene(env),
             new SpinningRobotsScene(env),
@@ -751,7 +755,7 @@ class GraphicsContext {
             new YellowRobotScene(env),
             new IceCreamScene(env),
             new Tracers(env),
-            new HexagonScene(env),
+            //new HexagonScene(env),
             new GantryScene(env),
             new SpectrumScene(env),
             new FastCubeScene(env)
@@ -953,6 +957,7 @@ class GraphicsContext {
 
     keydown(e) {
         const num = parseInt(e.key);
+        console.log(num);
         if (!isNaN(num)) {
             const scene_idx = Math.min(num % 10, this.scenes.length - 1);
             this.change_scene(scene_idx);
