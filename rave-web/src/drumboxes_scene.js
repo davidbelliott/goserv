@@ -161,6 +161,8 @@ export class DrumboxScene extends VisScene {
 
         this.clock = new THREE.Clock();
         this.base_group = new THREE.Group();
+        this.paddle_group = new THREE.Group();
+        this.base_group.add(this.paddle_group);
         this.drums = [];
 
         //const cuboct = polyhedron_from_data(new TruncatedCuboctahedron());
@@ -169,39 +171,66 @@ export class DrumboxScene extends VisScene {
 
         //const cube = create_instanced_cube([1, 1, 1], "white");
         //this.base_group.add(cube);
-        const loader = new STLLoader();
-        const stl_load_promise = loader.loadAsync('stl/truncated-cuboctahedron.stl');
+        const loaders = {
+            'stl/truncated-cuboctahedron.stl': new STLLoader(),
+            'stl/drumbox-paddle-top.stl': new STLLoader(),
+        };
+        const stl_load_promises = [];
+        for (const [key, loader] of Object.entries(loaders)) {
+            stl_load_promises.push(loader.loadAsync(key));
+        }
 
         this.shader_loader = new ShaderLoader('glsl/chunks/dither_pars.frag',
             'glsl/chunks/dither.frag');
         const shader_load_promise = this.shader_loader.load();
         this.spacing = 16;
-        this.num_per_side = 10;
-        Promise.all([stl_load_promise, shader_load_promise]).then(([geometry, [dither_pars, dither]]) => {
-            const cube_geom = new THREE.BoxGeometry(1, 1, 1);
+        this.num_per_side = 8;
+        Promise.all([...stl_load_promises, shader_load_promise]).then((results) => {
+            const geometries = results.slice(0, -1);
+            const dither_pars = results[results.length - 1][0];
+            const dither = results[results.length - 1][1];
             const cube_mat = new THREE.MeshLambertMaterial({
                 color: "red",
                 polygonOffset: true,
                 polygonOffsetFactor: 1,
                 polygonOffsetUnits: 1
             });
+            const paddle_mat = new THREE.MeshLambertMaterial({
+                color: "white",
+                polygonOffset: true,
+                polygonOffsetFactor: 1,
+                polygonOffsetUnits: 1
+            });
             const wireframe_mat = new THREE.LineBasicMaterial( { color: "red", linewidth: 1, transparent: true } );
+            const paddle_wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1, transparent: true } );
 
-            cube_mat.onBeforeCompile = (shader) => {
-                shader.fragmentShader =
-                    shader.fragmentShader.replace(
-                        '#include <dithering_pars_fragment>',
-                        dither_pars
-                    ).replace(
-                        '#include <dithering_fragment>',
-                        dither
-                    );
-            };
+            for (const mat of [cube_mat, paddle_mat]) {
+                mat.onBeforeCompile = (shader) => {
+                    shader.fragmentShader =
+                        shader.fragmentShader.replace(
+                            '#include <dithering_pars_fragment>',
+                            dither_pars
+                        ).replace(
+                            '#include <dithering_fragment>',
+                            dither
+                        );
+                };
+            }
             console.log("Loading finished cuboct");
-            let edges = new THREE.EdgesGeometry(geometry, 30);
-            const cube = new THREE.Mesh(geometry, cube_mat);
+
+
+            // Main polyhedron
+            let edges = new THREE.EdgesGeometry(geometries[0], 30);
+            const cube = new THREE.Mesh(geometries[0], cube_mat);
             cube.add(new THREE.LineSegments(edges, wireframe_mat));
             cube.scale.multiplyScalar(1 / 8);
+            // Top paddle
+            let top_paddle_edges = new THREE.EdgesGeometry(geometries[1], 30);
+            const top_paddle = new THREE.Mesh(geometries[1], paddle_mat);
+            top_paddle.add(new THREE.LineSegments(top_paddle_edges, paddle_wireframe_mat));
+            top_paddle.scale.multiplyScalar(1 / 8);
+            this.paddle_group.add(top_paddle);
+
             for (let i = 0; i < this.num_per_side; i++) {
                 for (let j = 0; j < this.num_per_side; j++) {
                     const c = cube.clone();
@@ -222,11 +251,14 @@ export class DrumboxScene extends VisScene {
         this.scene = new THREE.Scene();
         this.scene.add(this.base_group);
 
-        this.light = new THREE.DirectionalLight("white", 0.5);
+        this.light = new THREE.DirectionalLight("white", 0.75);
         this.light.position.set(0, 0, 100);
         //this.light = new THREE.PointLight("white", 400);
         //this.light.position.set(0, 0, 20);
         this.base_group.add(this.light);
+
+        this.top_paddle_pound_time = 0.08;
+        this.impacts = [];
     }
 
     get_palette_color(t) {
@@ -243,16 +275,55 @@ export class DrumboxScene extends VisScene {
         return new THREE.Color(...out);
     }
 
+    paddle_pos(t_till_impact, drum_pos) {
+        const t = t_till_impact;
+        if (t < 0 && t > -1) {
+            return 4 * (t + 0.5) ** 2 - 1;
+        } else {
+            return 4 * Math.max(0, Math.abs(t + 0.5) - 0.5);
+        }
+    }
+
+    drum_pos(t) {
+        t = Math.min(0, t);
+        return 4 * 2 * Math.sin(Math.PI * t / 2) / (Math.PI * (1 - t / 2));
+    }
+
     anim_frame(dt) {
         //this.base_group.rotation.z += 0.001;
+        let top_paddle_pos = this.paddle_pos(1, 0);
+        let drum_pos = 0;
+        while (this.impacts.length > 0 &&
+                this.impacts[0][0] < -16 * this.top_paddle_pound_time) {
+            this.impacts.shift();
+        }
+        console.log(this.impacts.length);
+        for (let i = 0; i < this.impacts.length; i++) {
+            this.impacts[i][0] -= dt;
+            if (this.impacts[i][1] == 1) {
+                drum_pos += this.drum_pos(
+                    this.impacts[i][0] / this.top_paddle_pound_time);
+            }
+        }
+        for (let i = 0; i < this.impacts.length; i++) {
+            if (this.impacts[i][1] == 1) {
+                top_paddle_pos = Math.min(top_paddle_pos, this.paddle_pos(
+                    this.impacts[i][0] / this.top_paddle_pound_time, drum_pos));
+            }
+        }
         for (const d of this.drums) {
             d.rotation.z += 0.01;
+        }
+        this.paddle_group.position.z = top_paddle_pos;
+        if (this.drums.length > 36) {
+            this.drums[36].position.z = drum_pos;
+            this.paddle_group.rotation.z = this.drums[36].rotation.z;
         }
     }
 
     handle_beat(t, channel) {
-        //const delay = Math.max(60 / this.get_local_bpm() / 2 - this.env.total_latency, 0);
-        //this.beat_clock.stop();
-        //setTimeout(() => { this.beat_clock.start(); }, delay * 1000);
+        const time_till_impact = 60 / this.env.bpm / 2 - this.env.total_latency;
+        console.log(time_till_impact);
+        this.impacts.push([time_till_impact, channel]);
     }
 }
