@@ -1,10 +1,11 @@
+import asyncio
 from enum import Enum
 import json
 import time
 import rtmidi
 from collections import deque
 import pathlib
-from websockets.sync.client import connect
+import websockets
 from rtmidi.midiconstants import *
 from rtmidi.midiutil import open_midiinput
 import sys
@@ -196,7 +197,7 @@ class MidiInputHandler(object):
         
 
         if ws_msg != None:
-            self.websocket.send(ws_msg.to_json())
+            asyncio.create_task(self.websocket.send(ws_msg.to_json()))
 
 
 def usage():
@@ -211,41 +212,55 @@ for i in [0, 4, 8, 12]:
 #for i in [0, 6]:
     #fake_beat[i].append(3)
 
-def main():
+async def main():
     midiin = None
     if len(sys.argv) == 2 and sys.argv[1] == '-h':
         usage()
     elif len(sys.argv) == 3 and sys.argv[1] == '--fake':
         bpm = float(sys.argv[2])
-        with connect(WS_RELAY) as websocket:
-             beat_idx = 0
-             while True:
-                ws_msg = None
-                if beat_idx % 4 == 0:
-                    ws_msg = MsgSync(time.time(), bpm, beat_idx // 4)
-                    websocket.send(ws_msg.to_json())
-                cur_beats = fake_beat[beat_idx % len(fake_beat)]
-                for beat in cur_beats:
-                    ws_msg = MsgBeat(time.time(), beat)
-                    websocket.send(ws_msg.to_json())
-                time.sleep(60 / bpm / 4)
-                beat_idx += 1
+        beat_idx = 0
+        while True:
+            try:
+                async with websockets.connect(WS_RELAY) as websocket:
+                    while True:
+                        ws_msg = None
+                        if beat_idx % 4 == 0:
+                            print(beat_idx // 4)
+                            ws_msg = MsgSync(time.time(), bpm, beat_idx // 4)
+                            print(ws_msg.to_json())
+                            await websocket.send(ws_msg.to_json())
+                            await websocket.recv()
+                        cur_beats = fake_beat[beat_idx % len(fake_beat)]
+                        for beat in cur_beats:
+                            ws_msg = MsgBeat(time.time(), beat)
+                            print(ws_msg.to_json())
+                            await websocket.send(ws_msg.to_json())
+                            await websocket.recv()
+                        await asyncio.sleep(60 / bpm / 4)
+                        beat_idx += 1
+            except websockets.exceptions.ConnectionClosedError:
+                print('Connection closed, retrying...')
+                await asyncio.sleep(1)
+                continue
                 
     elif len(sys.argv) == 1:
         midiin = rtmidi.MidiIn()
         port = sys.argv[1] if len(sys.argv) > 1 else None
         midiin, port_name = open_midiinput(port)
 
-        with connect(WS_RELAY) as websocket:
-            midiin.set_callback(MidiInputHandler(port_name, websocket))
+        while True:
             try:
-                # Just wait for keyboard interrupt,
-                # everything else is handled via the input callback.
-                while True:
-                    time.sleep(1)
+                async with websockets.connect(WS_RELAY) as websocket:
+                    midiin.cancel_callback()
+                    midiin.set_callback(MidiInputHandler(port_name, websocket))
+                    await asyncio.Future()
+            except websockets.exceptions.ConnectionClosedError:
+                print('Connection closed, retrying...')
+                await asyncio.sleep(1)
+                continue
             finally:
                 midiin.close_port()
                 del midiin
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
