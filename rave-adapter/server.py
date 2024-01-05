@@ -9,7 +9,8 @@ from rtmidi.midiconstants import *
 from rtmidi.midiutil import open_midiinput
 import sys
 
-WS_RELAY = "ws://deadfacade.net/rave/ws"
+#WS_RELAY = "ws://deadfacade.net/rave/ws"
+WS_RELAY = "ws://192.168.1.36:8765"
 USE_STROBE = False
 
 cur_beat_idx = 0
@@ -159,6 +160,7 @@ class MidiInputHandler(object):
         if (midi_msg[0] & 0xF0 == NOTE_ON) and midi_msg[2] != 0:
             channel = (midi_msg[0] & 0xF) + 1
             note_number = midi_msg[1]
+            print(f'note_on\t{channel}\t{note_number}')
             if channel == 16:
                 # This channel is used for synchronization
                 elapsed = bpm_estimator.ping()
@@ -180,9 +182,12 @@ class MidiInputHandler(object):
                 # Remaining channels are used for controlling elements within the scene
                 ws_msg = MsgBeat(t, channel)
         elif midi_msg[0] == NOTE_OFF:
+            print(f'note_off\t{channel}\t{note_number}')
             if channel == 15:
                 if USE_STROBE:
                     strobe_off()
+            else:
+                ws_msg = MsgBeatOff(t, channel)
         elif midi_msg[0] == TIMING_CLOCK:
             #clock_receiver.ping()
             print('clock')
@@ -191,35 +196,56 @@ class MidiInputHandler(object):
         
 
         if ws_msg != None:
-            try:
-                self.websocket.send(ws_msg.to_json())
-            except Exception as e:
-                print(f'Error sending message: {e}')
+            self.websocket.send(ws_msg.to_json())
 
+
+def usage():
+    print("Usage: %s [-h | --fake bpm | [port]]" % sys.argv[0])
+
+
+fake_beat = [[] for i in range(0, 16)]
+for i in [0, 4, 8, 12]:
+    fake_beat[i].append(1)
+#for i in [4, 12]:
+    #fake_beat[i].append(2)
+#for i in [0, 6]:
+    #fake_beat[i].append(3)
 
 def main():
-    midiin = rtmidi.MidiIn()
-    port = sys.argv[1] if len(sys.argv) > 1 else None
-
-    try:
+    midiin = None
+    if len(sys.argv) == 2 and sys.argv[1] == '-h':
+        usage()
+    elif len(sys.argv) == 3 and sys.argv[1] == '--fake':
+        bpm = float(sys.argv[2])
+        with connect(WS_RELAY) as websocket:
+             beat_idx = 0
+             while True:
+                ws_msg = None
+                if beat_idx % 4 == 0:
+                    ws_msg = MsgSync(time.time(), bpm, beat_idx // 4)
+                    websocket.send(ws_msg.to_json())
+                cur_beats = fake_beat[beat_idx % len(fake_beat)]
+                for beat in cur_beats:
+                    ws_msg = MsgBeat(time.time(), beat)
+                    websocket.send(ws_msg.to_json())
+                time.sleep(60 / bpm / 4)
+                beat_idx += 1
+                
+    elif len(sys.argv) == 1:
+        midiin = rtmidi.MidiIn()
+        port = sys.argv[1] if len(sys.argv) > 1 else None
         midiin, port_name = open_midiinput(port)
-    except (EOFError, KeyboardInterrupt):
-        sys.exit()
 
-    with connect(WS_RELAY) as websocket:
-        midiin.set_callback(MidiInputHandler(port_name, websocket))
-        try:
-            # Just wait for keyboard interrupt,
-            # everything else is handled via the input callback.
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print('')
-        finally:
-            print("Exit.")
-            midiin.close_port()
-            del midiin
-
+        with connect(WS_RELAY) as websocket:
+            midiin.set_callback(MidiInputHandler(port_name, websocket))
+            try:
+                # Just wait for keyboard interrupt,
+                # everything else is handled via the input callback.
+                while True:
+                    time.sleep(1)
+            finally:
+                midiin.close_port()
+                del midiin
 
 if __name__ == "__main__":
     main()
