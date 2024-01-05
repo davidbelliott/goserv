@@ -174,6 +174,7 @@ export class DrumboxScene extends VisScene {
         const loaders = {
             'stl/truncated-cuboctahedron.stl': new STLLoader(),
             'stl/drumbox-paddle-top.stl': new STLLoader(),
+            'stl/drumbox-paddle-side-0.stl': new STLLoader(),
         };
         const stl_load_promises = [];
         for (const [key, loader] of Object.entries(loaders)) {
@@ -185,24 +186,26 @@ export class DrumboxScene extends VisScene {
         const shader_load_promise = this.shader_loader.load();
         this.spacing = 16;
         this.num_per_side = 8;
+        const drum_color = "red";
         Promise.all([...stl_load_promises, shader_load_promise]).then((results) => {
             const geometries = results.slice(0, -1);
             const dither_pars = results[results.length - 1][0];
             const dither = results[results.length - 1][1];
             const cube_mat = new THREE.MeshLambertMaterial({
-                color: "red",
+                color: drum_color,
                 polygonOffset: true,
                 polygonOffsetFactor: 1,
                 polygonOffsetUnits: 1
             });
             const paddle_mat = new THREE.MeshLambertMaterial({
-                color: "white",
+                color: "pink",
                 polygonOffset: true,
                 polygonOffsetFactor: 1,
                 polygonOffsetUnits: 1
             });
-            const wireframe_mat = new THREE.LineBasicMaterial( { color: "red", linewidth: 1, transparent: true } );
+            const wireframe_mat = new THREE.LineBasicMaterial( { color: drum_color, linewidth: 1, transparent: true } );
             const paddle_wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1, transparent: true } );
+            const side_paddle_wireframe_mat = new THREE.LineBasicMaterial( { color: "white", linewidth: 1, transparent: true } );
 
             for (const mat of [cube_mat, paddle_mat]) {
                 mat.onBeforeCompile = (shader) => {
@@ -226,10 +229,27 @@ export class DrumboxScene extends VisScene {
             cube.scale.multiplyScalar(1 / 8);
             // Top paddle
             let top_paddle_edges = new THREE.EdgesGeometry(geometries[1], 30);
-            const top_paddle = new THREE.Mesh(geometries[1], paddle_mat);
-            top_paddle.add(new THREE.LineSegments(top_paddle_edges, paddle_wireframe_mat));
-            top_paddle.scale.multiplyScalar(1 / 8);
-            this.paddle_group.add(top_paddle);
+            this.top_paddle = new THREE.Mesh(geometries[1], paddle_mat);
+            this.top_paddle.add(new THREE.LineSegments(top_paddle_edges, paddle_wireframe_mat));
+            this.top_paddle.scale.multiplyScalar(1 / 8);
+            this.paddle_group.add(this.top_paddle);
+
+            // Side paddles
+            this.side_paddles = [];
+            let side_paddle_edges = new THREE.EdgesGeometry(geometries[2], 30);
+            const side_paddle = new THREE.Mesh(geometries[2], paddle_mat);
+            side_paddle.add(new THREE.LineSegments(side_paddle_edges, side_paddle_wireframe_mat));
+            side_paddle.scale.multiplyScalar(1 / 8);
+            for (let i = 0; i < 4; i++) {
+                const this_side_paddle = side_paddle.clone();
+                const offset = new THREE.Vector3(1/2, 1/2, 1/2);
+                offset.applyAxisAngle(new THREE.Vector3(0, 0, 1), i * Math.PI / 2);
+                offset.multiplyScalar(4);
+                this_side_paddle.rotation.z = i * Math.PI / 2;
+                this_side_paddle.position.add(offset);
+                this.side_paddles.push(this_side_paddle);
+                this.paddle_group.add(this_side_paddle);
+            }
 
             for (let i = 0; i < this.num_per_side; i++) {
                 for (let j = 0; j < this.num_per_side; j++) {
@@ -242,6 +262,11 @@ export class DrumboxScene extends VisScene {
                     this.base_group.add(c);
                 }
             }
+            this.light = new THREE.PointLight("white", 400);
+            this.light.position.set(0, 0, 40);
+            //this.light = new THREE.PointLight("white", 400);
+            //this.light.position.set(0, 0, 20);
+            this.drums[36].add(this.light);
         });
 
         this.base_group.rotation.x = -Math.PI / 4 ;
@@ -251,13 +276,15 @@ export class DrumboxScene extends VisScene {
         this.scene = new THREE.Scene();
         this.scene.add(this.base_group);
 
-        this.light = new THREE.DirectionalLight("white", 0.75);
-        this.light.position.set(0, 0, 100);
-        //this.light = new THREE.PointLight("white", 400);
-        //this.light.position.set(0, 0, 20);
-        this.base_group.add(this.light);
+
+        //this.light2 = new THREE.AmbientLight("white", 0.10);
+        //this.base_group.add(this.light2);
+        this.directional_light = new THREE.DirectionalLight("white", 0.2);
+        this.directional_light.position.set(0, 0, 100);
+        //this.base_group.add(this.directional_light);
 
         this.top_paddle_pound_time = 0.08;
+        this.side_paddle_pound_time = 0.15;
         this.impacts = [];
     }
 
@@ -283,6 +310,10 @@ export class DrumboxScene extends VisScene {
             return 4 * Math.max(0, Math.abs(t + 0.5) - 0.5);
         }
     }
+    side_paddle_pos(t_till_impact, drum_pos) {
+        const t = t_till_impact;
+        return 4 * (1 - (Math.abs(clamp(t, -1, 1)) - 1) ** 2);
+    }
 
     drum_pos(t) {
         t = Math.min(0, t);
@@ -292,6 +323,7 @@ export class DrumboxScene extends VisScene {
     anim_frame(dt) {
         //this.base_group.rotation.z += 0.001;
         let top_paddle_pos = this.paddle_pos(1, 0);
+        let side_paddle_pos = this.side_paddle_pos(1, 0);
         let drum_pos = 0;
         while (this.impacts.length > 0 &&
                 this.impacts[0][0] < -16 * this.top_paddle_pound_time) {
@@ -309,15 +341,26 @@ export class DrumboxScene extends VisScene {
             if (this.impacts[i][1] == 1) {
                 top_paddle_pos = Math.min(top_paddle_pos, this.paddle_pos(
                     this.impacts[i][0] / this.top_paddle_pound_time, drum_pos));
+            } else if (this.impacts[i][1] == 2) {
+                side_paddle_pos = Math.min(side_paddle_pos, this.side_paddle_pos(
+                    this.impacts[i][0] / this.side_paddle_pound_time, drum_pos));
             }
         }
         for (const d of this.drums) {
             d.rotation.z += 0.01;
         }
-        this.paddle_group.position.z = top_paddle_pos;
-        if (this.drums.length > 36) {
-            this.drums[36].position.z = drum_pos;
-            this.paddle_group.rotation.z = this.drums[36].rotation.z;
+        if (this.top_paddle) {
+            this.top_paddle.position.z = top_paddle_pos;
+            if (this.drums.length > 36) {
+                this.drums[36].position.z = drum_pos;
+                this.paddle_group.rotation.z = this.drums[36].rotation.z;
+            }
+            for (let i = 0; i < 4; i++) {
+                const offset = new THREE.Vector3(1/2, 1/2, 1/2);
+                offset.applyAxisAngle(new THREE.Vector3(0, 0, 1), i * Math.PI / 2);
+                offset.multiplyScalar(side_paddle_pos);
+                this.side_paddles[i].position.copy(offset);
+            }
         }
     }
 
