@@ -36,6 +36,10 @@ export class DrumboxScene extends VisScene {
         this.base_group.add(this.drums_group);
         this.drums = [];
         this.initialized = false;
+        this.movement_clock = new THREE.Clock();
+        this.movement_clock.start();
+        this.movement_start_pos = new THREE.Vector3(0, 0, 0);
+        this.movement_end_pos = new THREE.Vector3(0, 0, 0);
 
         //const cube = create_instanced_cube([1, 1, 1], "white");
         //this.base_group.add(cube);
@@ -125,12 +129,18 @@ export class DrumboxScene extends VisScene {
                 this.paddle_group.add(this_side_paddle);
             }
 
+            this.damping_coeff = 2;
+            this.spring_constant = 200;
+            this.top_paddle_strike_vel = 20;
+            this.side_paddle_strike_vel = 5;
+
             for (let i = 0; i < this.num_per_side; i++) {
                 this.drums.push([]);
                 for (let j = 0; j < this.num_per_side; j++) {
                     const c = cube.clone();
                     const pos = this.drum_pos_in_array(i, j);
                     c.position.copy(pos);
+                    c.velocity = new THREE.Vector3(0, 0, 0);
                     this.drums[i].push(c);
                     this.drums_group.add(c);
                 }
@@ -154,6 +164,7 @@ export class DrumboxScene extends VisScene {
 
         this.top_paddle_pound_time = 0.08;
         this.side_paddle_pound_time = 0.15;
+        this.movement_time_beats = 1;
         this.impacts = [];
 
         this.drift_vel = 3.0;
@@ -175,22 +186,26 @@ export class DrumboxScene extends VisScene {
         return new THREE.Color(...out);
     }
 
-    paddle_pos(t_till_impact, drum_pos) {
+    paddle_pos(t_till_impact, target_drum_z) {
         const t = t_till_impact;
-        if (t < 0 && t > -1) {
-            return 4 * (t + 0.5) ** 2 - 1;
+        const plain_pos = 4 * (Math.abs(t + 0.5) - 0.5);
+        if (plain_pos > target_drum_z) {
+            return [plain_pos, false];
         } else {
-            return 4 * Math.max(0, Math.abs(t + 0.5) - 0.5);
+            return [target_drum_z, true];
         }
     }
-    side_paddle_pos(t_till_impact, drum_pos) {
+    side_paddle_pos(t_till_impact) {
         const t = t_till_impact;
         return 4 * (1 - (Math.abs(clamp(t, -1, 1)) - 1) ** 2);
     }
 
-    drum_pos(t) {
-        t = Math.min(0, t);
-        return 4 * 2 * Math.sin(Math.PI * t / 2) / (Math.PI * (1 - t / 2));
+    paddle_group_movement_y(t) {
+        return 8 * (1 - (2 * t - 1) ** 2);
+    }
+
+    drum_spring_accel(x, v) {
+        return -this.damping_coeff * v - this.spring_constant * x;
     }
 
     drum_pos_in_array(i, j) {
@@ -204,59 +219,90 @@ export class DrumboxScene extends VisScene {
         if (!this.initialized) {
             return;
         }
+        const beats_per_sec = this.get_local_bpm() / 60;
+
+        this.drums_group.position.y += this.drift_vel * dt;
+        const max_offset = this.spacing * Math.sqrt(2);
+        while (this.drums_group.position.y > max_offset) {
+            this.drums_group.position.y -= max_offset;
+            this.movement_start_pos.x += this.spacing;
+            this.movement_start_pos.y += this.spacing;
+            this.movement_end_pos.x += this.spacing;
+            this.movement_end_pos.y += this.spacing;
+            this.cur_drum_idx[0] = clamp(this.cur_drum_idx[0] + 1, 0, this.num_per_side - 1);
+            this.cur_drum_idx[1] = clamp(this.cur_drum_idx[1] + 1, 0, this.num_per_side - 1);
+            for (let idx = 0; idx < 2 * this.num_per_side - 1; idx++) {
+                let i = clamp(idx, 0, this.num_per_side - 1);
+                let j = clamp(2 * this.num_per_side - idx - 1, 0, this.num_per_side - 1);
+                while (i > 0 && j > 0) {
+                    const prev_i = i - 1;
+                    const prev_j = j - 1;
+                    this.drums[i][j].position.z = this.drums[prev_i][prev_j].position.z;
+                    this.drums[i][j].velocity.copy(this.drums[prev_i][prev_j].velocity);
+                    i = prev_i;
+                    j = prev_j;
+                }
+            }
+        }
+
+
+        for (const row of this.drums) {
+            for (const drum of row) {
+                drum.rotation.z += 0.01;
+                drum.position.z += drum.velocity.z * dt;
+                drum.velocity.z += this.drum_spring_accel(drum.position.z, drum.velocity.z) * dt;
+            }
+        }
+
+        const target_drum_z = this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].position.z;
+
+        const frac = clamp(this.movement_clock.getElapsedTime() * beats_per_sec / this.movement_time_beats, 0, 1);
+        this.paddle_group.position.lerpVectors(this.movement_start_pos, this.movement_end_pos, frac);
+        this.paddle_group.position.z = this.paddle_group_movement_y(frac);
+
+
         //this.base_group.rotation.z += 0.001;
-        let top_paddle_pos = this.paddle_pos(1, 0);
+        let top_paddle_pos = this.paddle_pos(1, target_drum_z)[0];
         let side_paddle_pos = this.side_paddle_pos(1, 0);
-        let drum_pos = 0;
+
+        // Discard old impacts
         while (this.impacts.length > 0 &&
                 this.impacts[0][0] < -16 * this.top_paddle_pound_time) {
             this.impacts.shift();
         }
 
         for (let i = 0; i < this.impacts.length; i++) {
-            this.impacts[i][0] -= dt;
-            if (this.impacts[i][1] == 1) {
-                drum_pos += this.drum_pos(
-                    this.impacts[i][0] / this.top_paddle_pound_time);
+            const new_time = this.impacts[i][0] - dt;
+            if (this.impacts[i][0] >= 0 && new_time < 0) {
+                // Impact on target drum
+                let strike_vel = this.top_paddle_strike_vel;
+                if (this.impacts[i][1] == 2) {
+                    strike_vel = this.side_paddle_strike_vel;
+                }
+                this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].velocity.z -= strike_vel;
             }
-        }
+            this.impacts[i][0] = new_time;
 
-
-        for (let i = 0; i < this.impacts.length; i++) {
             if (this.impacts[i][1] == 1) {
                 top_paddle_pos = Math.min(top_paddle_pos, this.paddle_pos(
-                    this.impacts[i][0] / this.top_paddle_pound_time, drum_pos));
+                    this.impacts[i][0] / this.top_paddle_pound_time,
+                    target_drum_z)[0]);
             } else if (this.impacts[i][1] == 2) {
                 side_paddle_pos = Math.min(side_paddle_pos, this.side_paddle_pos(
-                    this.impacts[i][0] / this.side_paddle_pound_time, drum_pos));
-            }
-        }
-        for (const row of this.drums) {
-            for (const drum of row) {
-                drum.rotation.z += 0.01;
+                    this.impacts[i][0] / this.side_paddle_pound_time));
             }
         }
 
         // Apply offsets to objects
-        this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].position.z = drum_pos;
-        this.paddle_group.rotation.z = this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].rotation.z;
+        //this.paddle_group.rotation.z = this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].rotation.z;
         this.top_paddle.position.z = top_paddle_pos;
+
         for (let i = 0; i < 4; i++) {
             const offset = new THREE.Vector3(1/2, 1/2, 1/2);
             offset.applyAxisAngle(new THREE.Vector3(0, 0, 1), i * Math.PI / 2);
             offset.multiplyScalar(side_paddle_pos);
             this.side_paddles[i].position.copy(offset);
         }
-
-        this.drums_group.position.y += this.drift_vel * dt;
-        const max_offset = this.spacing * Math.sqrt(2);
-        while (this.drums_group.position.y > max_offset) {
-            this.drums_group.position.y -= max_offset;
-            this.cur_drum_idx[0] = (this.cur_drum_idx[0] + 1) % this.num_per_side;
-            this.cur_drum_idx[1] = (this.cur_drum_idx[1] + 1) % this.num_per_side;
-        }
-        this.paddle_group.position.copy(this.drum_pos_in_array(
-            this.cur_drum_idx[0], this.cur_drum_idx[1]));
     }
 
     handle_beat(t, channel) {
@@ -266,9 +312,17 @@ export class DrumboxScene extends VisScene {
     }
 
     handle_sync(t, bpm, beat) {
-        if (beat % 4 == 0) {
-            this.cur_drum_idx[0] = Math.floor(Math.random() * 4 - 2 + this.num_per_side / 2);
-            this.cur_drum_idx[1] = Math.floor(Math.random() * 4 - 2 + this.num_per_side / 2);
+        if (beat % 4 == 0 && this.cur_drum_idx[0] + this.cur_drum_idx[1] > this.num_per_side - 1) {
+            //if (Math.random() < this.cur_drum_idx[0] / (this.num_per_side - 1)) {
+            if (Math.random() < 0.5) {
+                this.cur_drum_idx[0] = clamp(this.cur_drum_idx[0] - 1, 0, this.num_per_side - 1);
+            } else {
+                this.cur_drum_idx[1] = clamp(this.cur_drum_idx[1] - 1, 0, this.num_per_side - 1);
+            }
+            this.movement_clock.start();
+            this.movement_start_pos.copy(this.paddle_group.position);
+            this.movement_end_pos.copy(this.drum_pos_in_array(
+                this.cur_drum_idx[0], this.cur_drum_idx[1]));
         }
     }
 }
