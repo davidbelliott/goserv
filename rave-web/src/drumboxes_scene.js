@@ -14,144 +14,13 @@ import {
 } from './util.js';
 import { InstancedGeometryCollection } from './instanced_geom.js';
 
-class TruncatedCuboctahedron {
-    constructor() {
-        const C0 = 1.20710678118654752440084436210;
-        const C1 = 1.91421356237309504880168872421;
-        // 8 sided faces = 6
-        // 6 sided faces = 8
-        // 4 sided faces = 12
-        this.vertex = [
-            [  C0,  0.5,   C1],
-            [  C0,  0.5,  -C1],
-            [  C0, -0.5,   C1],
-            [  C0, -0.5,  -C1],
-            [ -C0,  0.5,   C1],
-            [ -C0,  0.5,  -C1],
-            [ -C0, -0.5,   C1],
-            [ -C0, -0.5,  -C1],
-            [  C1,   C0,  0.5],
-            [  C1,   C0, -0.5],
-            [  C1,  -C0,  0.5],
-            [  C1,  -C0, -0.5],
-            [ -C1,   C0,  0.5],
-            [ -C1,   C0, -0.5],
-            [ -C1,  -C0,  0.5],
-            [ -C1,  -C0, -0.5],
-            [ 0.5,   C1,   C0],
-            [ 0.5,   C1,  -C0],
-            [ 0.5,  -C1,   C0],
-            [ 0.5,  -C1,  -C0],
-            [-0.5,   C1,   C0],
-            [-0.5,   C1,  -C0],
-            [-0.5,  -C1,   C0],
-            [-0.5,  -C1,  -C0],
-            [ 0.5,   C0,   C1],
-            [ 0.5,   C0,  -C1],
-            [ 0.5,  -C0,   C1],
-            [ 0.5,  -C0,  -C1],
-            [-0.5,   C0,   C1],
-            [-0.5,   C0,  -C1],
-            [-0.5,  -C0,   C1],
-            [-0.5,  -C0,  -C1],
-            [  C1,  0.5,   C0],
-            [  C1,  0.5,  -C0],
-            [  C1, -0.5,   C0],
-            [  C1, -0.5,  -C0],
-            [ -C1,  0.5,   C0],
-            [ -C1,  0.5,  -C0],
-            [ -C1, -0.5,   C0],
-            [ -C1, -0.5,  -C0],
-            [  C0,   C1,  0.5],
-            [  C0,   C1, -0.5],
-            [  C0,  -C1,  0.5],
-            [  C0,  -C1, -0.5],
-            [ -C0,   C1,  0.5],
-            [ -C0,   C1, -0.5],
-            [ -C0,  -C1,  0.5],
-            [ -C0,  -C1, -0.5]];
-
-        this.face = [
-            [  2 , 26, 30,  6,  4, 28, 24,  0],
-            [ 25 , 29,  5,  7, 31, 27,  3,  1],
-            [  9 , 33, 35, 11, 10, 34, 32,  8],
-            [ 36 , 38, 14, 15, 39, 37, 13, 12],
-            [ 20 , 44, 45, 21, 17, 41, 40, 16],
-            [ 42 , 43, 19, 23, 47, 46, 22, 18],
-            [ 24 , 16, 40,  8, 32,  0],
-            [ 33 ,  9, 41, 17, 25,  1],
-            [ 34 , 10, 42, 18, 26,  2],
-            [ 27 , 19, 43, 11, 35,  3],
-            [ 36 , 12, 44, 20, 28,  4],
-            [ 29 , 21, 45, 13, 37,  5],
-            [ 30 , 22, 46, 14, 38,  6],
-            [ 39 , 15, 47, 23, 31,  7],
-            [ 32 , 34,  2,  0],
-            [  3 , 35, 33,  1],
-            [  6 , 38, 36,  4],
-            [ 37 , 39,  7,  5],
-            [ 40 , 41,  9,  8],
-            [ 11 , 43, 42, 10],
-            [ 13 , 45, 44, 12],
-            [ 46 , 47, 15, 14],
-            [ 24 , 28, 20, 16],
-            [ 21 , 29, 25, 17],
-            [ 22 , 30, 26, 18],
-            [ 27 , 31, 23, 19]];
-
-        this.edge = this._get_edges(this.face);
-    }
-
-    _get_edges(faces) {
-        var edges = new Set();
-        for (var i = 0; i < faces.length; i++) {
-            var face = faces[i];
-            for (var j = 0; j < face.length; j++) {
-                var edge = [face[j], face[(j + 1) % face.length]];
-                if (edge[0] > edge[1]) {
-                    edge = [edge[1], edge[0]];
-                } else if (edge[0] > edge[1]) {
-                    edge = [edge[0], edge[1]];
-                }
-                edges.add(edge);
-            }
-        }
-        return Array.from(edges);
-    }
-}
-
-function polyhedron_from_data(data)
-{
-    // convert vertex data to THREE.js vectors
-    var vertex = []
-    for (var i = 0; i < data.vertex.length; i++) {
-        vertex.push( new THREE.Vector3( data.vertex[i][0], data.vertex[i][1], data.vertex[i][2] ).multiplyScalar(1) );
-    }
-
-    var segment_vertices = new Float32Array(6 * data.edge.length);
-    for (var i = 0; i < data.edge.length; i++)
-    {
-        var index0 = data.edge[i][0];
-        var index1 = data.edge[i][1];
-        vertex[index0].toArray(segment_vertices, 6 * i);
-        vertex[index1].toArray(segment_vertices, 6 * i + 3);
-    }
-
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(segment_vertices, 3));
-
-    const mat = new THREE.LineBasicMaterial({color: "white"});
-    const lines = new THREE.LineSegments(geom, mat);
-    return lines;
-}
-
 export class DrumboxScene extends VisScene {
     constructor(env) {
         super(env);
         const width = window.innerWidth;
         const height = window.innerHeight;
         const aspect = width / height;
-        this.frustum_size = 40;
+        this.frustum_size = 50;
         this.cam_orth = new THREE.OrthographicCamera(
             -this.frustum_size / 2,
             this.frustum_size / 2,
@@ -161,13 +30,12 @@ export class DrumboxScene extends VisScene {
 
         this.clock = new THREE.Clock();
         this.base_group = new THREE.Group();
+        this.drums_group = new THREE.Group();
         this.paddle_group = new THREE.Group();
-        this.base_group.add(this.paddle_group);
+        this.drums_group.add(this.paddle_group);
+        this.base_group.add(this.drums_group);
         this.drums = [];
-
-        //const cuboct = polyhedron_from_data(new TruncatedCuboctahedron());
-        //cuboct.scale.multiplyScalar(4);
-        //this.base_group.add(cuboct);
+        this.initialized = false;
 
         //const cube = create_instanced_cube([1, 1, 1], "white");
         //this.base_group.add(cube);
@@ -232,6 +100,12 @@ export class DrumboxScene extends VisScene {
             this.top_paddle = new THREE.Mesh(geometries[1], paddle_mat);
             this.top_paddle.add(new THREE.LineSegments(top_paddle_edges, paddle_wireframe_mat));
             this.top_paddle.scale.multiplyScalar(1 / 8);
+
+            this.light = new THREE.PointLight("white", 400);
+            this.light.position.set(0, 0, 24);
+            //this.light = new THREE.PointLight("white", 400);
+            //this.light.position.set(0, 0, 20);
+            this.top_paddle.add(this.light);
             this.paddle_group.add(this.top_paddle);
 
             // Side paddles
@@ -252,25 +126,20 @@ export class DrumboxScene extends VisScene {
             }
 
             for (let i = 0; i < this.num_per_side; i++) {
+                this.drums.push([]);
                 for (let j = 0; j < this.num_per_side; j++) {
                     const c = cube.clone();
-                    c.position.set(
-                        this.spacing * (i - this.num_per_side / 2),
-                        this.spacing * (j - this.num_per_side / 2),
-                        0);
-                    this.drums.push(c);
-                    this.base_group.add(c);
+                    const pos = this.drum_pos_in_array(i, j);
+                    c.position.copy(pos);
+                    this.drums[i].push(c);
+                    this.drums_group.add(c);
                 }
             }
-            this.light = new THREE.PointLight("white", 400);
-            this.light.position.set(0, 0, 40);
-            //this.light = new THREE.PointLight("white", 400);
-            //this.light.position.set(0, 0, 20);
-            this.drums[36].add(this.light);
+            this.initialized = true;
         });
 
-        this.base_group.rotation.x = -Math.PI / 4 ;
-        this.base_group.rotation.z = Math.PI / 4;
+        this.drums_group.rotation.z = Math.PI / 4 ;
+        this.camera.rotation.x = Math.PI / 4;
 
 
         this.scene = new THREE.Scene();
@@ -286,6 +155,10 @@ export class DrumboxScene extends VisScene {
         this.top_paddle_pound_time = 0.08;
         this.side_paddle_pound_time = 0.15;
         this.impacts = [];
+
+        this.drift_vel = 3.0;
+        this.cur_drum_idx = [Math.floor(this.num_per_side / 2),
+            Math.floor(this.num_per_side / 2)];
     }
 
     get_palette_color(t) {
@@ -320,7 +193,17 @@ export class DrumboxScene extends VisScene {
         return 4 * 2 * Math.sin(Math.PI * t / 2) / (Math.PI * (1 - t / 2));
     }
 
+    drum_pos_in_array(i, j) {
+        return new THREE.Vector3(
+            this.spacing * (i - this.num_per_side / 2),
+            this.spacing * (j - this.num_per_side / 2),
+            0);
+    }
+
     anim_frame(dt) {
+        if (!this.initialized) {
+            return;
+        }
         //this.base_group.rotation.z += 0.001;
         let top_paddle_pos = this.paddle_pos(1, 0);
         let side_paddle_pos = this.side_paddle_pos(1, 0);
@@ -329,7 +212,7 @@ export class DrumboxScene extends VisScene {
                 this.impacts[0][0] < -16 * this.top_paddle_pound_time) {
             this.impacts.shift();
         }
-        console.log(this.impacts.length);
+
         for (let i = 0; i < this.impacts.length; i++) {
             this.impacts[i][0] -= dt;
             if (this.impacts[i][1] == 1) {
@@ -337,6 +220,8 @@ export class DrumboxScene extends VisScene {
                     this.impacts[i][0] / this.top_paddle_pound_time);
             }
         }
+
+
         for (let i = 0; i < this.impacts.length; i++) {
             if (this.impacts[i][1] == 1) {
                 top_paddle_pos = Math.min(top_paddle_pos, this.paddle_pos(
@@ -346,27 +231,44 @@ export class DrumboxScene extends VisScene {
                     this.impacts[i][0] / this.side_paddle_pound_time, drum_pos));
             }
         }
-        for (const d of this.drums) {
-            d.rotation.z += 0.01;
-        }
-        if (this.top_paddle) {
-            this.top_paddle.position.z = top_paddle_pos;
-            if (this.drums.length > 36) {
-                this.drums[36].position.z = drum_pos;
-                this.paddle_group.rotation.z = this.drums[36].rotation.z;
-            }
-            for (let i = 0; i < 4; i++) {
-                const offset = new THREE.Vector3(1/2, 1/2, 1/2);
-                offset.applyAxisAngle(new THREE.Vector3(0, 0, 1), i * Math.PI / 2);
-                offset.multiplyScalar(side_paddle_pos);
-                this.side_paddles[i].position.copy(offset);
+        for (const row of this.drums) {
+            for (const drum of row) {
+                drum.rotation.z += 0.01;
             }
         }
+
+        // Apply offsets to objects
+        this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].position.z = drum_pos;
+        this.paddle_group.rotation.z = this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].rotation.z;
+        this.top_paddle.position.z = top_paddle_pos;
+        for (let i = 0; i < 4; i++) {
+            const offset = new THREE.Vector3(1/2, 1/2, 1/2);
+            offset.applyAxisAngle(new THREE.Vector3(0, 0, 1), i * Math.PI / 2);
+            offset.multiplyScalar(side_paddle_pos);
+            this.side_paddles[i].position.copy(offset);
+        }
+
+        this.drums_group.position.y += this.drift_vel * dt;
+        const max_offset = this.spacing * Math.sqrt(2);
+        while (this.drums_group.position.y > max_offset) {
+            this.drums_group.position.y -= max_offset;
+            this.cur_drum_idx[0] = (this.cur_drum_idx[0] + 1) % this.num_per_side;
+            this.cur_drum_idx[1] = (this.cur_drum_idx[1] + 1) % this.num_per_side;
+        }
+        this.paddle_group.position.copy(this.drum_pos_in_array(
+            this.cur_drum_idx[0], this.cur_drum_idx[1]));
     }
 
     handle_beat(t, channel) {
         const time_till_impact = 60 / this.env.bpm / 2 - this.env.total_latency;
         console.log(time_till_impact);
         this.impacts.push([time_till_impact, channel]);
+    }
+
+    handle_sync(t, bpm, beat) {
+        if (beat % 4 == 0) {
+            this.cur_drum_idx[0] = Math.floor(Math.random() * 4 - 2 + this.num_per_side / 2);
+            this.cur_drum_idx[1] = Math.floor(Math.random() * 4 - 2 + this.num_per_side / 2);
+        }
     }
 }
