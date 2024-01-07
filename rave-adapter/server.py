@@ -145,59 +145,51 @@ def strobe_off():
         print(f'Error setting strobe on: {e}')
 
 
-class MidiInputHandler(object):
-    def __init__(self, midiport, websocket):
-        self.port = midiport
-        self.websocket = websocket
-        self._wallclock = time.time()
-
-    def __call__(self, event, data=None):
-        global cur_beat_idx
-        midi_msg, deltatime = event
-        self._wallclock += deltatime
-        print("[%s] @%0.6f %r" % (self.port, self._wallclock, midi_msg))
-        t = self._wallclock
-        ws_msg = None
-        if (midi_msg[0] & 0xF0 == NOTE_ON) and midi_msg[2] != 0:
-            channel = (midi_msg[0] & 0xF) + 1
-            note_number = midi_msg[1]
-            print(f'note_on\t{channel}\t{note_number}')
-            if channel == 16:
-                # This channel is used for synchronization
-                elapsed = bpm_estimator.ping()
-                if elapsed > BEAT_RESET_TIMEOUT:
-                    cur_beat_idx = 0
-                ws_msg = MsgSync(t, bpm_estimator.bpm, cur_beat_idx)
-                cur_beat_idx = cur_beat_idx + 1
-            elif channel == 15:
-                # This channel is used for lighting control
-                if USE_STROBE:
-                    strobe_on()
-            elif channel == 14:
-                # This channel is used for graphics scene switching
-                ws_msg = MsgGotoScene(t, note_number - 60)
-            elif channel == 13:
-                # This channel is used for moving forward/backward in the graphics scene
-                ws_msg = MsgAdvanceSceneState(t, 2 * (note_number % 2) - 1)
-            else:
-                # Remaining channels are used for controlling elements within the scene
-                ws_msg = MsgBeat(t, channel)
-        elif midi_msg[0] == NOTE_OFF:
-            print(f'note_off\t{channel}\t{note_number}')
-            if channel == 15:
-                if USE_STROBE:
-                    strobe_off()
-            else:
-                ws_msg = MsgBeatOff(t, channel)
-        elif midi_msg[0] == TIMING_CLOCK:
-            #clock_receiver.ping()
-            print('clock')
+def translate_midi_msg(msg):
+    global cur_beat_idx
+    midi_msg, deltatime = msg
+    ws_msg = None
+    if (midi_msg[0] & 0xF0 == NOTE_ON) and midi_msg[2] != 0:
+        channel = (midi_msg[0] & 0xF) + 1
+        note_number = midi_msg[1]
+        print(f'note_on\t{channel}\t{note_number}')
+        if channel == 16:
+            # This channel is used for synchronization
+            elapsed = bpm_estimator.ping()
+            if elapsed > BEAT_RESET_TIMEOUT:
+                cur_beat_idx = 0
+            ws_msg = MsgSync(0, bpm_estimator.bpm, cur_beat_idx)
+            cur_beat_idx = cur_beat_idx + 1
+        elif channel == 15:
+            # This channel is used for lighting control
+            if USE_STROBE:
+                strobe_on()
+        elif channel == 14:
+            # This channel is used for graphics scene switching
+            ws_msg = MsgGotoScene(0, note_number - 60)
+        elif channel == 13:
+            # This channel is used for moving forward/backward in the graphics scene
+            ws_msg = MsgAdvanceSceneState(0, 2 * (note_number % 2) - 1)
         else:
-            print(midi_msg)
-        
+            # Remaining channels are used for controlling elements within the scene
+            ws_msg = MsgBeat(0, channel)
+    elif midi_msg[0] == NOTE_OFF:
+        print(f'note_off\t{channel}\t{note_number}')
+        if channel == 15:
+            if USE_STROBE:
+                strobe_off()
+        else:
+            ws_msg = MsgBeatOff(0, channel)
+    elif midi_msg[0] == TIMING_CLOCK:
+        #clock_receiver.ping()
+        print('clock')
+    else:
+        print(midi_msg)
+    
 
-        if ws_msg != None:
-            asyncio.create_task(self.websocket.send(ws_msg.to_json()))
+    if ws_msg != None:
+        print(ws_msg)
+    return ws_msg
 
 
 def usage():
@@ -247,20 +239,22 @@ async def main():
         midiin = rtmidi.MidiIn()
         port = sys.argv[1] if len(sys.argv) > 1 else None
         midiin, port_name = open_midiinput(port)
+        msg_queue = asyncio.Queue()
 
         while True:
             try:
                 async with websockets.connect(WS_RELAY) as websocket:
-                    midiin.cancel_callback()
-                    midiin.set_callback(MidiInputHandler(port_name, websocket))
-                    await asyncio.Future()
+                    while True:
+                        midi_msg = midiin.get_message()
+                        if midi_msg:
+                            ws_msg = translate_midi_msg(midi_msg)
+                            if ws_msg:
+                                await websocket.send(ws_msg.to_json())
+                                await websocket.recv()
             except websockets.exceptions.ConnectionClosedError:
                 print('Connection closed, retrying...')
                 await asyncio.sleep(1)
                 continue
-            finally:
-                midiin.close_port()
-                del midiin
 
 if __name__ == "__main__":
     asyncio.run(main())
