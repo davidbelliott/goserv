@@ -49,18 +49,25 @@ class MIDIClockReceiver:
             self.sync = True
 
 class BPMEstimator:
-    def __init__(self, bpm=None):
-        self.bpm = bpm if bpm is not None else 120.0
+    def __init__(self, bpm=120):
+        self.bpm = bpm
         self._last_clock = None
+        self._samples = deque()
 
     def ping(self):
         now = time.time()
         elapsed = 0
         if self._last_clock != None:
-            elapsed = now - self._last_clock
-            self.bpm = 60.0 / elapsed
+            self._samples.append(now - self._last_clock)
         self._last_clock = now
-        self.sync = True
+
+        while len(self._samples) > 24:
+            self._samples.popleft()
+
+        if len(self._samples) >= 2:
+            self.bpm = 60.0 / (sum(self._samples) / len(self._samples))
+            self.sync = True
+
         print(self.bpm)
         return elapsed
 
