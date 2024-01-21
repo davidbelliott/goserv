@@ -111,7 +111,7 @@ function connect() {
     pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
     const protocol = (location.protocol === 'https:' ? 'wss' : 'ws');
     const relay_url = (import.meta.env.MODE === 'development') ?
-        '192.168.1.36:8765' : `${window.location.hostname}${pathname}ws`;
+        '192.168.1.35:8765' : `${window.location.hostname}${pathname}ws`;
     const socket = new WebSocket(`${protocol}://${relay_url}`);
     //const socket = new WebSocket(`ws://192.168.1.2:8765`);
     socket.addEventListener('message', function(e) {
@@ -123,11 +123,7 @@ function connect() {
             //console.log(`Beat ${msg.beat}`);
             //
             console.log(`raw: ${msg.bpm}`);
-            if (env.bpm == 0) {
-                env.bpm = msg.bpm;
-            } else {
-                env.bpm = env.bpm * 7 / 8 + msg.bpm * 1 / 8;
-            }
+            env.bpm = msg.bpm;
             context.handle_sync(msg.t, env.bpm, msg.beat);
         } else if (type == MSG_TYPE_BEAT) {
             context.handle_beat(msg.t, msg.channel);
@@ -749,6 +745,7 @@ class GraphicsContext {
         this.tracers = false;
         this.clock = new THREE.Clock(true);
         this.scenes = [
+            new IceCreamScene(env),
             new DrumboxScene(env),
             new SlideScene(env, ["img/cover.png", "img/santa-claus.jpg", "img/santa-claus-2.png"]),
             new IntroScene(env),
@@ -759,7 +756,6 @@ class GraphicsContext {
             new CubeLockingScene(env),
             new HomeBackground(env),
             new YellowRobotScene(env),
-            new IceCreamScene(env),
             new Tracers(env),
             //new HexagonScene(env),
             new GantryScene(env),
@@ -999,7 +995,9 @@ class GraphicsContext {
         ]);
 
         setTimeout(() => {
-            this.scenes[this.cur_scene_idx]._handle_sync_raw(t, bpm, beat + 1);
+            this.scenes.forEach((scene) => {
+                scene._handle_sync_raw(t, bpm, beat + 1);
+            });
         }, delay * 1000);
     }
 
@@ -1011,7 +1009,9 @@ class GraphicsContext {
             start_t,
             start_t + thirtysecond_note_dur
         ]);
-        this.scenes[this.cur_scene_idx].handle_beat(t, channel);
+        this.scenes.forEach((scene) => {
+            scene.handle_beat(t, channel);
+        });
     }
 }
 
