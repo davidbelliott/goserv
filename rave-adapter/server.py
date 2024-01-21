@@ -14,6 +14,9 @@ import sys
 WS_RELAY = "ws://192.168.1.36:8765"
 USE_STROBE = False
 
+MIN_BPM = 60
+MAX_BPM = 200
+
 cur_beat_idx = 0
 BEAT_RESET_TIMEOUT = 2
 
@@ -25,28 +28,6 @@ if USE_STROBE:
     dmx = OpenDMXController()
     strobe = dmx.add_fixture(Custom, name="ADJ Mega Flash", channels=2)
 
-class MIDIClockReceiver:
-    def __init__(self, bpm=None):
-        self.bpm = bpm if bpm is not None else 120.0
-        self.sync = False
-        self.running = True
-        self._samples = deque()
-        self._last_clock = None
-
-    def ping(self):
-        now = time.time()
-
-        if self._last_clock is not None:
-            self._samples.append(now - self._last_clock)
-
-        self._last_clock = now
-
-        if len(self._samples) > 24:
-            self._samples.popleft()
-
-        if len(self._samples) >= 2:
-            self.bpm = 2.5 / (sum(self._samples) / len(self._samples))
-            self.sync = True
 
 class BPMEstimator:
     def __init__(self, bpm=120):
@@ -54,11 +35,16 @@ class BPMEstimator:
         self._last_clock = None
         self._samples = deque()
 
+
     def ping(self):
         now = time.time()
         elapsed = 0
         if self._last_clock != None:
-            self._samples.append(now - self._last_clock)
+            elapsed = now - self._last_clock
+            if elapsed != 0:
+                this_sample_bpm = 60.0 / elapsed
+                if this_sample_bpm > MIN_BPM and this_sample_bpm < MAX_BPM:
+                    self._samples.append(elapsed)
         self._last_clock = now
 
         while len(self._samples) > 24:
