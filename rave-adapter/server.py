@@ -65,8 +65,10 @@ class BPMEstimator:
             self._samples.popleft()
 
         if len(self._samples) >= 2:
-            self.bpm = 60.0 / (sum(self._samples) / len(self._samples))
-            self.sync = True
+            avg_elapsed = (sum(self._samples) / len(self._samples))
+            if avg_elapsed != 0:
+                self.bpm = 60.0 / avg_elapsed
+                self.sync = True
 
         print(self.bpm)
         return elapsed
