@@ -111,7 +111,7 @@ function connect() {
     pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
     const protocol = (location.protocol === 'https:' ? 'wss' : 'ws');
     const relay_url = (import.meta.env.MODE === 'development') ?
-        '192.168.1.35:8765' : `${window.location.hostname}${pathname}ws`;
+        '192.168.1.30:8765' : `${window.location.hostname}${pathname}ws`;
     const socket = new WebSocket(`${protocol}://${relay_url}`);
     //const socket = new WebSocket(`ws://192.168.1.2:8765`);
     socket.addEventListener('message', function(e) {
@@ -122,7 +122,6 @@ function connect() {
             //bg.cubes_group.rotation.y += 0.1;
             //console.log(`Beat ${msg.beat}`);
             //
-            console.log(`raw: ${msg.bpm}`);
             env.bpm = msg.bpm;
             context.handle_sync(msg.t, env.bpm, msg.beat);
         } else if (type == MSG_TYPE_BEAT) {
@@ -745,8 +744,8 @@ class GraphicsContext {
         this.tracers = false;
         this.clock = new THREE.Clock(true);
         this.scenes = [
-            new IceCreamScene(env),
             new DrumboxScene(env),
+            new IceCreamScene(env),
             new SlideScene(env, ["img/cover.png", "img/santa-claus.jpg", "img/santa-claus-2.png"]),
             new IntroScene(env),
             new SpinningRobotsScene(env),
@@ -856,7 +855,8 @@ class GraphicsContext {
     }
 
     anim_frame() {
-        const dt = this.clock.getDelta();
+        //const dt = this.clock.getDelta();
+        const dt = 1.0 / 60.0;
         const t_now = this.clock.getElapsedTime();
         this.scenes[this.cur_scene_idx].anim_frame(dt);
 
@@ -941,7 +941,9 @@ class GraphicsContext {
         const height = window.innerHeight;
         const aspect = width / height;
         this.recreate_buffers(width, height);
-        this.scenes[this.cur_scene_idx].handle_resize(width, height);
+        this.scenes.forEach((scene) => {
+            scene.handle_resize(width, height);
+        });
         this.renderer.setSize(width, height);
     }
 

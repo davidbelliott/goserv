@@ -176,7 +176,6 @@ export class IceCreamScene extends VisScene {
                     this_class.lightning_strike_meshes.push(lightning_strike_mesh);
                     this_class.fg_group.add(lightning_strike_mesh);
                 }
-                console.log("brain loaded");
             },
             (xhr) => { },
             (error) => {

@@ -50,7 +50,6 @@ export class VisScene {
             div_bpm /= 2;
             this.bpm_divisor *= 2;
         }
-        console.log(div_bpm);
 
         if (beat % this.bpm_divisor == 0) {
             const beat_idx = Math.floor(beat / this.bpm_divisor);

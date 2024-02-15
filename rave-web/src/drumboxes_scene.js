@@ -10,7 +10,8 @@ import {
     clamp,
     arr_eq,
     create_instanced_cube,
-    ShaderLoader
+    ShaderLoader,
+    BeatClock
 } from './util.js';
 import { InstancedGeometryCollection } from './instanced_geom.js';
 
@@ -39,14 +40,15 @@ export class DrumboxScene extends VisScene {
         this.base_group.add(this.drums_group);
         this.drums = [];
         this.initialized = false;
-        this.movement_clock = new THREE.Clock(false);
+        this.movement_clock = new BeatClock(this, false);
         this.movement_clock.start();
         this.retreat_pos = new THREE.Vector3(40, 40, 0);
         this.movement_start_pos = this.retreat_pos.clone();
         this.movement_end_pos = this.retreat_pos.clone();
         this.retreat_movement_beats = 8;
         this.beats_for_this_movement = this.retreat_movement_beats;
-        this.drift_vels = [3, 3, 5];
+        this.drift_vels = [0, 2, 5];
+        this.drift_vel = this.drift_vels[0];
 
         //const cube = create_instanced_cube([1, 1, 1], "white");
         //this.base_group.add(cube);
@@ -172,15 +174,15 @@ export class DrumboxScene extends VisScene {
 
         this.top_paddle_pound_time = 0.08;
         this.side_paddle_pound_time = 0.15;
-        this.movement_time_beats = 1;
+        this.movement_time_beats = 0.5;
         this.impacts = [];
 
-        this.drift_vel = 3.0;
         this.cur_drum_idx = [Math.floor(this.num_per_side / 2),
             Math.floor(this.num_per_side / 2)];
 
         this.color_hue = 0.0;
         this.clock = new THREE.Clock(true);
+        this.in_position = false;
     }
 
     get_palette_color(t) {
@@ -211,7 +213,8 @@ export class DrumboxScene extends VisScene {
     }
 
     paddle_group_movement_y(t) {
-        return 8 * (1 - (2 * t - 1) ** 2);
+        return 6 * (1 - (2 * t - 1) ** 2);
+        //return 8 * Math.min(0.5, 1 - Math.abs(2 * t - 1));
     }
 
     drum_spring_accel(x, v) {
@@ -229,7 +232,6 @@ export class DrumboxScene extends VisScene {
         if (!this.initialized) {
             return;
         }
-        const beats_per_sec = this.get_local_bpm() / 60;
 
         this.drums_group.position.y += this.drift_vel * dt;
         const max_offset = this.spacing * Math.sqrt(2);
@@ -266,7 +268,7 @@ export class DrumboxScene extends VisScene {
 
         const target_drum_z = this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].position.z;
 
-        const frac = clamp(this.movement_clock.getElapsedTime() * beats_per_sec / this.beats_for_this_movement, 0, 1);
+        const frac = clamp(this.movement_clock.get_elapsed_beats() / this.beats_for_this_movement, 0, 1);
         this.paddle_group.position.lerpVectors(this.movement_start_pos, this.movement_end_pos, frac);
         this.paddle_group.position.z = this.paddle_group_movement_y(frac);
 
@@ -281,14 +283,16 @@ export class DrumboxScene extends VisScene {
             this.impacts.shift();
         }
 
-        let is_active = this.cur_state_idx != 0 && frac == 1.0;
+        this.in_position = this.cur_state_idx != 0 && frac == 1.0;
 
         for (let i = 0; i < this.impacts.length; i++) {
             const new_time = this.impacts[i][0] - dt;
-            if (is_active && this.impacts[i][0] >= 0 && new_time < 0) {
+            if (this.in_position && this.impacts[i][0] >= 0 && new_time < 0) {
                 // Impact on target drum
-                let strike_vel = this.top_paddle_strike_vel;
-                if (this.impacts[i][1] == 2) {
+                let strike_vel = 0;
+                if (this.impacts[i][1] == 1) {
+                    strike_vel = this.top_paddle_strike_vel;
+                } else if (this.impacts[i][1] == 2) {
                     strike_vel = this.side_paddle_strike_vel;
                 }
                 this.drums[this.cur_drum_idx[0]][this.cur_drum_idx[1]].velocity.z -= strike_vel;
@@ -297,7 +301,7 @@ export class DrumboxScene extends VisScene {
             }
             this.impacts[i][0] = new_time;
 
-            if (is_active) {
+            if (this.in_position) {
                 if (this.impacts[i][1] == 1) {
                     top_paddle_pos = Math.min(top_paddle_pos, this.paddle_pos(
                         this.impacts[i][0] / this.top_paddle_pound_time,
@@ -337,10 +341,13 @@ export class DrumboxScene extends VisScene {
     }
 
     handle_sync(t, bpm, beat) {
-        const beats_per_sec = bpm / 60;
-        if (this.cur_state_idx != 0) {
-            if (beat % 4 == 0 && this.cur_drum_idx[0] + this.cur_drum_idx[1] > this.num_per_side - 2) {
-                let left_weight = (4 * (this.cur_drum_idx[0] / (this.num_per_side - 1) - 1 / 2)) ** 3;
+        if (this.in_position) {
+            if (beat % 2 == 0 && this.cur_drum_idx[0] + this.cur_drum_idx[1] > this.num_per_side - 2) {
+                const cur_paddle_world_pos = new THREE.Vector3();
+                this.paddle_group.getWorldPosition(cur_paddle_world_pos);
+                const x = cur_paddle_world_pos.x / this.frustum_size;
+                const left_weight = (Math.tanh(1 * x) + 1) / 2;
+                console.log(`left_weight: ${left_weight}`);
                 if (Math.random() < left_weight) {
                     this.cur_drum_idx[0] = clamp(this.cur_drum_idx[0] - 1, 0, this.num_per_side - 1);
                 } else {
@@ -359,13 +366,13 @@ export class DrumboxScene extends VisScene {
             this.movement_start_pos.copy(this.paddle_group.position);
             this.cur_drum_idx = [3, 3];
             this.movement_end_pos.copy(this.drum_pos_in_array(...this.cur_drum_idx));
-            this.movement_clock.start();
             this.beats_for_this_movement = this.retreat_movement_beats;
+            this.movement_clock.start();
         } else if (new_state_idx == 0) {
             this.movement_start_pos.copy(this.paddle_group.position);
             this.movement_end_pos.copy(this.retreat_pos);
-            this.movement_clock.start();
             this.beats_for_this_movement = this.retreat_movement_beats;
+            this.movement_clock.start();
         }
         this.drift_vel = this.drift_vels[this.cur_state_idx];
     }
