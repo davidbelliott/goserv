@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 from enum import Enum
 import json
@@ -11,7 +12,7 @@ from rtmidi.midiutil import open_midiinput
 import sys
 
 #WS_RELAY = "ws://deadfacade.net/rave/ws"
-WS_RELAY = "ws://192.168.1.36:8765"
+WS_RELAY = "ws://192.168.4.1:8765"
 USE_STROBE = False
 
 MIN_BPM = 60
@@ -103,9 +104,10 @@ class MsgSync(Msg):
 
 
 class MsgBeat(Msg):
-    def __init__(self, t, channel):
+    def __init__(self, t, channel, on=True):
         super().__init__(t, MsgSync.Type.BEAT)
         self.channel = channel
+        self.on = on
 
 
 class MsgGotoScene(Msg):
@@ -167,19 +169,17 @@ def translate_midi_msg(msg):
             ws_msg = MsgAdvanceSceneState(0, 2 * (note_number % 2) - 1)
         else:
             # Remaining channels are used for controlling elements within the scene
-            ws_msg = MsgBeat(0, channel)
+            ws_msg = MsgBeat(0, channel, True)
     elif midi_msg[0] == NOTE_OFF:
         print(f'note_off\t{channel}\t{note_number}')
         if channel == 15:
             if USE_STROBE:
                 strobe_off()
         else:
-            ws_msg = MsgBeatOff(0, channel)
+            ws_msg = MsgBeat(0, channel, False)
     elif midi_msg[0] == TIMING_CLOCK:
         #clock_receiver.ping()
         print('clock')
-    else:
-        print(midi_msg)
     
 
     if ws_msg != None:
@@ -200,56 +200,52 @@ for i in [0, 4, 8, 12]:
     #fake_beat[i].append(3)
 
 async def main():
-    midiin = None
-    if len(sys.argv) == 2 and sys.argv[1] == '-h':
-        usage()
-    elif len(sys.argv) == 3 and sys.argv[1] == '--fake':
-        bpm = float(sys.argv[2])
-        beat_idx = 0
-        while True:
-            try:
-                async with websockets.connect(WS_RELAY) as websocket:
-                    while True:
-                        ws_msg = None
-                        if beat_idx % 4 == 0:
-                            print(beat_idx // 4)
-                            ws_msg = MsgSync(time.time(), bpm, beat_idx // 4)
-                            print(ws_msg.to_json())
-                            await websocket.send(ws_msg.to_json())
-                            await websocket.recv()
-                        cur_beats = fake_beat[beat_idx % len(fake_beat)]
-                        for beat in cur_beats:
-                            ws_msg = MsgBeat(time.time(), beat)
-                            print(ws_msg.to_json())
-                            await websocket.send(ws_msg.to_json())
-                            await websocket.recv()
-                        await asyncio.sleep(60 / bpm / 4)
-                        beat_idx += 1
-            except websockets.exceptions.ConnectionClosedError:
-                print('Connection closed, retrying...')
-                await asyncio.sleep(1)
-                continue
-                
-    elif len(sys.argv) == 1:
-        midiin = rtmidi.MidiIn()
-        port = sys.argv[1] if len(sys.argv) > 1 else None
-        midiin, port_name = open_midiinput(port)
-        msg_queue = asyncio.Queue()
+    parser = argparse.ArgumentParser(description="Rave MIDI -> web adapter")
+    parser.add_argument('--fake', type=float, help='fake MIDI events with given BPM')
+    parser.add_argument('host', type=str, help='the URL or IP address to connect to with websockets')
+    parser.add_argument('-d', '--device', type=str, help='MIDI device to use (interactive if not specified)')
+    args = parser.parse_args()
 
-        while True:
-            try:
-                async with websockets.connect(WS_RELAY) as websocket:
-                    while True:
+    bpm = args.fake
+    beat_idx = 0
+    midiin = None
+    if not args.fake:
+        midiin = rtmidi.MidiIn()
+        midiin, _ = open_midiinput(args.device)
+
+    while True:
+        try:
+            async with websockets.connect(WS_RELAY) as websocket:
+                print('Connected to relay')
+                while True:
+                    if not args.fake:
                         midi_msg = midiin.get_message()
                         if midi_msg:
                             ws_msg = translate_midi_msg(midi_msg)
                             if ws_msg:
                                 await websocket.send(ws_msg.to_json())
                                 await websocket.recv()
-            except websockets.exceptions.ConnectionClosedError:
-                print('Connection closed, retrying...')
-                await asyncio.sleep(1)
-                continue
+                    else:
+                        if beat_idx % 4 == 0:
+                            ws_msg = MsgSync(time.time(), bpm, beat_idx // 4)
+                            await websocket.send(ws_msg.to_json())
+                            await websocket.recv()
+                        cur_beats = fake_beat[beat_idx % len(fake_beat)]
+                        for beat in cur_beats:
+                            ws_msg = MsgBeat(time.time(), beat)
+                            await websocket.send(ws_msg.to_json())
+                            await websocket.recv()
+                        await asyncio.sleep(60 / bpm / 4)
+                        beat_idx += 1
+
+        except (TimeoutError,
+                ConnectionRefusedError,
+                websockets.exceptions.ConnectionClosedError,
+                websockets.exceptions.ConnectionClosedOK):
+            print('Connection failed, retrying...')
+            await asyncio.sleep(1)
+            continue
+
 
 if __name__ == "__main__":
     asyncio.run(main())
