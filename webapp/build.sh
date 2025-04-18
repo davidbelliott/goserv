@@ -6,4 +6,4 @@ if [ ! -e go.mod ]; then
 fi
 go mod tidy
 go build -ldflags="-s -w" -o ./build/webapp
-cp -r templates static cuv.json kjv.json ./build/
+cp -r templates static cuv.json kjv.json run.sh ./build/
