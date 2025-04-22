@@ -610,11 +610,13 @@ func main() {
         defer listener.Close()
         err = fcgi.Serve(listener, r)
     } else if *unix != "" { // Run as FCGI via Unix socket
+        os.Remove(*unix)
         listener, err := net.Listen("unix", *unix)
         if err != nil {
             log.Fatal(err)
         }
         defer listener.Close()
+        defer os.Remove(*unix)
         err = fcgi.Serve(listener, r)
     } else {    // Run as FCGI via standard I/O
         err = fcgi.Serve(nil, r)
