@@ -1,2 +1,2 @@
 #!/bin/sh
-"$(dirname "$0")/webapp" -tcp :$1
+"$(dirname "$0")/main" --unix :$1
