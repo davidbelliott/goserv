@@ -7,6 +7,7 @@ import (
     "strconv"
     "log"
     "encoding/json"
+    "path/filepath"
     "io"
     "io/ioutil"
     "os"
@@ -207,19 +208,25 @@ func create_matrix_account(matrix_domain, auth_token, username, password string)
 
 
 func get_md_path(url_path string) (string, bool) {
+   ex, err := os.Executable()
+   if err != nil {
+       log.Fatal(err)
+   }
+   exPath := filepath.Dir(ex)
+
     target_path := string(url_path[1:])
     // If directory requested, give the index
     if len(target_path) == 0 || target_path[len(target_path) - 1] == '/' {
         target_path += index_name
     } else {
         // Check for missing trailing slash in dirname, and redirect
-        fi, err := os.Stat(fmt.Sprintf("%s/%s", template_dir, target_path))
+        fi, err := os.Stat(filepath.Join(exPath, template_dir, target_path))
         if err == nil && fi.Mode().IsDir() {
             // Directory was requested without trailing slash; return redirect URL
             return "", true
         }
     }
-    md_path := fmt.Sprintf("%s/%s.md", template_dir, target_path)
+    md_path := filepath.Join(exPath, template_dir, target_path + ".md")
     return md_path, false
 }
 
@@ -315,7 +322,13 @@ func standard_page_from_md(md string, path string) (Page, string) {
 }
 
 func notfound(w http.ResponseWriter, r *http.Request) {
-    md, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.md", template_dir, notfound_name))
+   ex, err := os.Executable()
+   if err != nil {
+       log.Fatal(err)
+   }
+   exPath := filepath.Dir(ex)
+
+    md, err := ioutil.ReadFile(filepath.Join(exPath, template_dir, notfound_name + ".md"))
     if err != nil {
         http.NotFound(w, r)
         return
@@ -335,7 +348,13 @@ func internalerror(w http.ResponseWriter) {
 }
 
 func get_template(template_name string) (*template.Template, error) {
-    template_path := fmt.Sprintf("%s/%s", template_dir, template_name)
+   ex, err := os.Executable()
+   if err != nil {
+       log.Fatal(err)
+   }
+   exPath := filepath.Dir(ex)
+
+    template_path := filepath.Join(exPath, template_dir, template_name)
     return template.New(template_name).Funcs(template.FuncMap{
             "inc": func(i int) int {
                 return i + 1
@@ -386,8 +405,13 @@ func bible_handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+   ex, err := os.Executable()
+   if err != nil {
+       log.Fatal(err)
+   }
+   exPath := filepath.Dir(ex)
 
-    md, err := ioutil.ReadFile(fmt.Sprintf("%s/bible.md", template_dir))
+    md, err := ioutil.ReadFile(filepath.Join(exPath, template_dir, "bible.md",))
     if err != nil {
         fmt.Println(err)
         notfound(w, r)
@@ -594,12 +618,18 @@ var (
 
 func main() {
     flag.Parse()
+
+    ex, err := os.Executable()
+    if err != nil {
+        log.Fatal(err)
+    }
+    exPath := filepath.Dir(ex)
+
     r := http.DefaultServeMux
     r.HandleFunc("/bible/", bible_handler)  // trailing slash: handle all sub-paths
     r.HandleFunc("/", handler)
-    fs := http.FileServer(http.Dir("./static"))
+    fs := http.FileServer(http.Dir(filepath.Join(exPath, "static")))
     r.Handle("/static/", http.StripPrefix("/static/", fs))
-    var err error
     if *local != "" { // Run as a local web server
         err = http.ListenAndServe(*local, r)
     } else if *tcp != "" {  // Run as FCGI via TCP
