@@ -19,11 +19,8 @@ css: index.css
 Welcome to my home on the World Wide Web.
 
 |:--|:--|
-|[Glen Canyon Archive](glen)|Documenting the now-submerged Glen Canyon|
-|[Music](music)|Homemade music|
-|[Rave Visuals](rave)|Real-time rave visuals|
-|[Bible](bible)|Bible|
-|[Hardware](hardware)|Hardware Projects|
-|[Repositories](git)|Self-hosted `git` repositories|
-|[Software](software)|Useful software|
-|[Network](network)|Related sites for your browsing pleasure|
+|[Glen Canyon Archive](https://glen.deadfacade.net)|Documenting the now-submerged Glen Canyon|
+|[Music](https://mus.deadfacade.net)|Electronic music|
+|[Visuals](https://viz.deadfacade.net)|Reactive visuals for music|
+|[Bible](https://bib.deadfacade.net)|Bible|
+|[Hardware](https://hw.deadfacade.net)|Hardware Projects|
